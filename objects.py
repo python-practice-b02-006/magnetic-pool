@@ -6,7 +6,7 @@ class Ball(pygame.sprite.Sprite):
     """
     Ball:
         pos (int, int): center coordinates
-        color (pygame.Color): instance
+        color (pygame.Color)
     """
 
     def __init__(self, group, radius, pos, color=pygame.Color("#f600ff")):
