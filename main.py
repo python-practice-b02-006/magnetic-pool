@@ -1,6 +1,7 @@
 import pygame
 import pygame_gui
 import game
+import objects
 
 WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
 FPS = 60
