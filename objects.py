@@ -10,11 +10,11 @@ class Ball(pygame.sprite.Sprite):
         vel numpy(float, float): x and y components of a velocity
     """
 
-    def __init__(self, group, radius, pos, vel, color=pygame.Color("#f600ff")):
+    def __init__(self, group, radius, pos, color=pygame.Color("#f600ff")):
         super().__init__(group)
         self.radius = radius
-        self.vel = vel
-        self.pos = pos
+        self.vel = np.zeros(2, dtype=float)
+        self.pos = np.array(pos, dtype=float)
 
         self.image = pygame.Surface((2 * radius, 2 * radius), pygame.SRCALPHA)
         pygame.draw.circle(self.image, color, (radius, radius), radius)

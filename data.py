@@ -18,10 +18,10 @@ def read_map(level):
             pocket_pos = [int(line[1]), int(line[2])]
         elif line[0] == "edge":
             for i in range(1, len(line), 2):
-                edge.append([line[i], line[i+1]])
+                edge.append([int(line[i]), int(line[i+1])])
         elif line[0] == "obstacle":
             for i in range(1, len(line), 2):
-                obstacle.append([line[i], line[i + 1]])
+                obstacle.append([int(line[i]), int(line[i + 1])])
 
     inp.close()
 
