@@ -5,7 +5,7 @@ import game
 WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
 FPS = 60
 DT = FPS/1000
-BG_COLOR = pygame.Color('black')
+BG_COLOR = pygame.Color('white')
 
 
 class Manager:
