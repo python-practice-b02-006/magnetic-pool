@@ -4,14 +4,17 @@ import numpy as np
 
 class Ball(pygame.sprite.Sprite):
     """
-    Ball:
-        pos (int, int): center coordinates
+    Attributes:
+        pos numpy(int, int): center coordinates
         color (pygame.Color)
+        vel numpy(float, float): x and y components of a velocity
     """
 
-    def __init__(self, group, radius, pos, color=pygame.Color("#f600ff")):
+    def __init__(self, group, radius, pos, vel, color=pygame.Color("#f600ff")):
         super().__init__(group)
         self.radius = radius
+        self.vel = vel
+        self.pos = pos
 
         self.image = pygame.Surface((2 * radius, 2 * radius), pygame.SRCALPHA)
         pygame.draw.circle(self.image, color, (radius, radius), radius)
@@ -33,12 +36,13 @@ class Pocket(pygame.sprite.Sprite):
     """Put ball here to win
 
     Attributes:
-        pos (int, int): center coordinates
+        pos numpy(int, int): center coordinates
     """
 
     def __init__(self, group, radius, pos):
         super().__init__(group)
         self.radius = radius
+        self.pos = pos
 
         self.image = pygame.Surface((2 * radius, 2 * radius), pygame.SRCALPHA)
         pygame.draw.circle(self.image, pygame.Color("black"), (radius, radius), radius)
@@ -49,7 +53,9 @@ class Pocket(pygame.sprite.Sprite):
 
 
 class Obstacle(pygame.sprite.Sprite):
-    """An object to stop ball
+    """An object to stop ball. Draws a polygon on a
+    transparent background with size of main window.
+    Than you blit it to main surface.
 
     Attributes:
         window_size (int, int): current size of main window
