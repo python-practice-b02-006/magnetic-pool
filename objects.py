@@ -20,6 +20,10 @@ class Ball(pygame.sprite.Sprite):
         pygame.draw.circle(self.image, color, (radius, radius), radius)
         self.rect = self.image.get_rect(center=pos)
 
+    def vel_value(self):
+        """Returns absolute value of a velosity"""
+        return (self.vel ** 2).sum() ** 0.5
+
     def update(self):
         pass
 
