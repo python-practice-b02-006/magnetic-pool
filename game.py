@@ -22,6 +22,7 @@ class Game:
         self.all_sprites = pygame.sprite.Group()
 
         self.ball = None
+        self.cue = None
         self.pocket = None
         self.edge = None
         self.map_data = data.read_map(level)
@@ -31,6 +32,7 @@ class Game:
 
     def make_map(self):
         self.ball = objects.Ball(self.all_sprites, 10, self.map_data[0])
+        # self.cue = objects.Cue(self.all_sprites, self.ball)
         self.pocket = objects.Pocket(self.all_sprites, 10, self.map_data[1])
         self.edge = objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[2])
 
@@ -46,4 +48,16 @@ class Game:
         """
         Updates positions of the ball and the target.
         """
-        pass
+        if self.ball.vel_value() == 0 or 1:
+            if event.button == 1: # right click
+                self.ball.vel = self.cue.get_vel()
+            if event.button == 4: # mousewheel up
+                self.cue.value += 5
+            if event.button == 5: # mousewheel down
+                self.cue.value -= 5
+
+            mouse_vector = np.array([event.pos[0] - self.cue.pos[0],
+                                    [event.pos[1] - self.cue.pos[1]]], dtype=float)
+            self.cue.direction = mouse_vector / (mouse_vector ** 2).sum()
+            self.cue.update(event.pos)
+            print(1)
