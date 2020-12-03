@@ -48,7 +48,8 @@ class Game:
         self.field.blit(self.pocket.image,
                         (self.pocket.pos[0] - self.ball.radius,
                          self.pocket.pos[1] - self.ball.radius))
-        self.field.blit(self.cue.image, self.cue.rect)
+        if self.ball.vel_value() == 0:
+            self.field.blit(self.cue.image, self.cue.rect)
 
     def update(self, event):
         """
@@ -57,7 +58,6 @@ class Game:
         if self.ball.vel_value() == 0 and event.type == pygame.MOUSEBUTTONDOWN:
             btn = event.button
             if btn == 1: # right click
-                # not finished
                 self.ball.vel = self.cue.get_vel()
             if btn == 4: # mousewheel up
                 self.cue.change_value(5)
@@ -65,4 +65,5 @@ class Game:
                 self.cue.change_value(-5)
 
         self.cue.update(pygame.mouse.get_pos())
+        self.cue.pos = self.ball.pos
 
