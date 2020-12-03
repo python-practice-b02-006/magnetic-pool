@@ -2,6 +2,7 @@ import pygame
 import pygame_gui
 import game
 import objects
+import numpy as np
 
 WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
 FPS = 60
@@ -36,6 +37,7 @@ class Manager:
         self.manager.draw_ui(screen)
 
         if self.game_on:
+            self.game.draw_on_field()
             screen.blit(self.game.field, (25, 0))
 
     def handle_events(self):
@@ -59,7 +61,7 @@ class Manager:
                         self.game_on = False
                         self.game = None
 
-            if self.game_on and event.type == pygame.MOUSEBUTTONDOWN:
+            if self.game_on:
                 self.game.update(event)
 
             self.manager.process_events(event)

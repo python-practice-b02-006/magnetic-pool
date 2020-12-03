@@ -1,7 +1,8 @@
 import pygame
 import objects
 import data
-from main import WINDOW_SIZE
+import numpy as np
+from main import WINDOW_SIZE, BG_COLOR
 
 
 class Game:
@@ -32,10 +33,14 @@ class Game:
 
     def make_map(self):
         self.ball = objects.Ball(self.all_sprites, 10, self.map_data[0])
-        # self.cue = objects.Cue(self.all_sprites, self.ball)
+        self.cue = objects.Cue(self.all_sprites, self.ball.pos, max_vel=5)
         self.pocket = objects.Pocket(self.all_sprites, 10, self.map_data[1])
         self.edge = objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[2])
 
+        self.draw_on_field()
+
+    def draw_on_field(self):
+        self.field.fill(BG_COLOR)
         self.field.blit(self.edge.image, (0, 0))
         self.field.blit(self.ball.image,
                         (self.ball.pos[0] - self.ball.radius,
@@ -43,21 +48,21 @@ class Game:
         self.field.blit(self.pocket.image,
                         (self.pocket.pos[0] - self.ball.radius,
                          self.pocket.pos[1] - self.ball.radius))
+        self.field.blit(self.cue.image, self.cue.rect)
 
     def update(self, event):
         """
         Updates positions of the ball and the target.
         """
-        if self.ball.vel_value() == 0 or 1:
-            if event.button == 1: # right click
+        if self.ball.vel_value() == 0 and event.type == pygame.MOUSEBUTTONDOWN:
+            btn = event.button
+            if btn == 1: # right click
+                # not finished
                 self.ball.vel = self.cue.get_vel()
-            if event.button == 4: # mousewheel up
-                self.cue.value += 5
-            if event.button == 5: # mousewheel down
-                self.cue.value -= 5
+            if btn == 4: # mousewheel up
+                self.cue.change_value(5)
+            if btn == 5: # mousewheel down
+                self.cue.change_value(-5)
 
-            mouse_vector = np.array([event.pos[0] - self.cue.pos[0],
-                                    [event.pos[1] - self.cue.pos[1]]], dtype=float)
-            self.cue.direction = mouse_vector / (mouse_vector ** 2).sum()
-            self.cue.update(event.pos)
-            print(1)
+        self.cue.update(pygame.mouse.get_pos())
+

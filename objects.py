@@ -30,7 +30,6 @@ class Ball(pygame.sprite.Sprite):
         self.pos = self.pos + self.vel * DT
         self.rect.pos = self.pos
 
-
 class Cue(pygame.sprite.Sprite):
     """Handles how user hits the ball
 
@@ -49,31 +48,47 @@ class Cue(pygame.sprite.Sprite):
         self.direction = np.zeros(2, dtype=float)
         self.max_vel = max_vel
 
-        self.image = load_image("arrow.png")
-        self.image = pygame.transform.scale(self.image, (50, 10))
+        self.image = load_image("arrow.png", -1)
         self.original_image = self.image.copy()
         self.rect = self.image.get_rect(center=(self.rect_center()))
 
     def get_vel(self):
-        return self.value / 100 * max_vel * self.direction
+        return self.value / 100 * self.max_vel * self.direction
 
     def rect_center(self):
         return list(np.int_(self.pos +
                     self.direction * self.original_image.get_rect().width / 2))
 
+    def change_value(self, value):
+        if value > 0:
+            self.value += value
+            if self.value > 100:
+                self.value = 100
+        elif value < 0:
+            self.value += value
+            if self.value < 0:
+                self.value = 0
+
     def filled_arrow(self):
-        return self.original_image
+        im = self.original_image.copy()
+        arr = pygame.PixelArray(im)
+        w, h = self.original_image.get_rect().size
+        for x in range(int(w * self.value / 100)):
+            for y in range(h):
+                if arr[x, y] == 0:
+                    arr[x, y] = pygame.Color("#00ff12")
+        return im
 
-    def update(self, pos):
-        mouse_vector = np.array([pos[0] - self.cue.pos[0],
-                                [pos[1] - self.cue.pos[1]]], dtype=float)
-        self.cue.direction = mouse_vector / (mouse_vector ** 2).sum()
+    def update(self, mouse_pos):
+        mouse_vector = np.array(mouse_pos) - self.pos
+        self.direction = mouse_vector / (mouse_vector ** 2).sum()
 
-        angle = np.arctan2(self.cue.direction)
+        angle = np.arctan2(*self.direction[::-1])
 
-        self.image = pygame.transform.rotate(self.filled_arrow(), -np.degrees(angle))
-        self.rect = self.image.get_rect(center=self.rect_center())
-
+        self.image, self.rect = rotate(self.filled_arrow(),
+                                       np.degrees(angle),
+                                       self.pos,
+                                       pygame.Vector2(self.original_image.get_rect().width / 2, 0))
 
 class Pocket(pygame.sprite.Sprite):
     """Put ball here to win
@@ -81,7 +96,6 @@ class Pocket(pygame.sprite.Sprite):
     Attributes:
         pos numpy(int, int): center coordinates
     """
-
     def __init__(self, group, radius, pos):
         super().__init__(group)
         self.radius = radius
@@ -119,6 +133,20 @@ class Obstacle(pygame.sprite.Sprite):
         pygame.draw.polygon(self.image, border_color, vertices, 1)
         self.rect = self.image.get_rect(topleft=(0, 0))
 
+
+def rotate(surface, angle, pivot, offset):
+    """Rotate the surface around the pivot point.
+    Args:
+        surface (pygame.Surface): The surface that is to be rotated.
+        angle (float): Rotate by this angle.
+        pivot (tuple, list, pygame.math.Vector2): The pivot point.
+        offset (pygame.math.Vector2): This vector is added to the pivot.
+    """
+    rotated_image = pygame.transform.rotate(surface, -angle)  # Rotate the image.
+    rotated_offset = offset.rotate(angle)  # Rotate the offset vector.
+    # Add the offset vector to the center/pivot point to shift the rect.
+    rect = rotated_image.get_rect(center=pivot+rotated_offset)
+    return rotated_image, rect  # Return the rotated image and shifted rect.
 
 def load_image(name, colorkey=None):
     fullname = os.path.join(os.path.dirname(__file__), 'images', name)
