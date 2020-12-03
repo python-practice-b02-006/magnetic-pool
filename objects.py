@@ -134,7 +134,6 @@ class Obstacle(pygame.sprite.Sprite):
         border_color, fill_color (pygame.Color)
         vertices (array of tuples (int, int)): vertices of a polygon
     """
-
     def __init__(self, group, window_size, vertices,
                  fill_color=pygame.Color("#0060ff"),
                  border_color=pygame.Color("#fa0041")):
