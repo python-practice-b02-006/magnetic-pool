@@ -81,7 +81,7 @@ class Cue(pygame.sprite.Sprite):
 
     def update(self, mouse_pos):
         mouse_vector = np.array(mouse_pos) - self.pos
-        self.direction = mouse_vector / (mouse_vector ** 2).sum()
+        self.direction = mouse_vector / (mouse_vector ** 2).sum() ** 0.5
 
         angle = np.arctan2(*self.direction[::-1])
 
@@ -119,7 +119,6 @@ class Obstacle(pygame.sprite.Sprite):
         border_color, fill_color (pygame.Color)
         vertices (array of tuples (int, int)): vertices of a polygon
     """
-
     def __init__(self, group, window_size, vertices,
                  fill_color=pygame.Color("#0060ff"),
                  border_color=pygame.Color("#fa0041")):
@@ -137,16 +136,15 @@ class Obstacle(pygame.sprite.Sprite):
 def rotate(surface, angle, pivot, offset):
     """Rotate the surface around the pivot point.
     Args:
-        surface (pygame.Surface): The surface that is to be rotated.
-        angle (float): Rotate by this angle.
-        pivot (tuple, list, pygame.math.Vector2): The pivot point.
-        offset (pygame.math.Vector2): This vector is added to the pivot.
+        surface (pygame.Surface): surface to be rotated.
+        angle (float): degrees.
+        pivot (tuple: pivot point coords.
+        offset (pygame.math.Vector2): this vector is added to the pivot.
     """
-    rotated_image = pygame.transform.rotate(surface, -angle)  # Rotate the image.
-    rotated_offset = offset.rotate(angle)  # Rotate the offset vector.
-    # Add the offset vector to the center/pivot point to shift the rect.
-    rect = rotated_image.get_rect(center=pivot+rotated_offset)
-    return rotated_image, rect  # Return the rotated image and shifted rect.
+    rotated_image = pygame.transform.rotate(surface, -angle)
+    rotated_offset = offset.rotate(angle)
+    rect = rotated_image.get_rect(center=pivot + rotated_offset)
+    return rotated_image, rect
 
 def load_image(name, colorkey=None):
     fullname = os.path.join(os.path.dirname(__file__), 'images', name)
