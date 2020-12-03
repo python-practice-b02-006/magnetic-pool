@@ -6,7 +6,7 @@ import numpy as np
 
 WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
 FPS = 60
-DT = FPS/1000
+DT = FPS/100
 BG_COLOR = pygame.Color('white')
 
 
@@ -44,7 +44,8 @@ class Manager:
         """
         Handles the events.
         """
-        for event in pygame.event.get():
+        events = pygame.event.get()
+        for event in events:
             if event.type == pygame.QUIT:
                 self.running = False
 
@@ -61,10 +62,9 @@ class Manager:
                         self.game_on = False
                         self.game = None
 
-            if self.game_on:
-                self.game.update(event)
-
             self.manager.process_events(event)
+        if self.game_on:
+            self.game.update(events, DT)
 
 
 def main():

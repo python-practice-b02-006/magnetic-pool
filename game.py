@@ -29,7 +29,8 @@ class Game:
         self.map_data = data.read_map(level)
         self.make_map()
 
-        self.B = 0
+        self.B = 0.05
+        self.friction = 0.003
 
     def make_map(self):
         self.ball = objects.Ball(self.all_sprites, 10, self.map_data[0])
@@ -46,32 +47,34 @@ class Game:
 
     def draw_on_field(self):
         self.field.fill(BG_COLOR)
-        self.field.blit(self.edge.image, (0, 0))
+        self.field.blit(self.obstacles[0].image, (0, 0))
         self.field.blit(self.ball.image,
                         (self.ball.pos[0] - self.ball.radius,
                          self.ball.pos[1] - self.ball.radius))
         self.field.blit(self.pocket.image,
                         (self.pocket.pos[0] - self.ball.radius,
                          self.pocket.pos[1] - self.ball.radius))
-        if self.ball.vel_value() == 0:
+        if self.ball.vel_value() < 0.001:
             self.field.blit(self.cue.image, self.cue.rect)
 
-    def update(self, event):
+    def update(self, events, dt):
         """
         Updates positions of the ball and the target.
         """
-        if self.ball.vel_value() == 0 and event.type == pygame.MOUSEBUTTONDOWN:
-            btn = event.button
-            if btn == 1: # right click
-                self.ball.vel = self.cue.get_vel()
-            if btn == 4: # mousewheel up
-                self.cue.change_value(5)
-            if btn == 5: # mousewheel down
-                self.cue.change_value(-5)
+        for event in events:
+            if self.ball.vel_value() < 0.001 and event.type == pygame.MOUSEBUTTONDOWN:
+                btn = event.button
+                if btn == 1:  # right click
+                    self.ball.vel = self.cue.get_vel()
+                if btn == 4:  # mousewheel up
+                    self.cue.change_value(5)
+                if btn == 5:  # mousewheel down
+                    self.cue.change_value(-5)
 
         self.cue.update(pygame.mouse.get_pos())
         self.cue.pos = self.ball.pos
 
         for obstacle in self.obstacles:
-            obstacle.collide(self.ball)
+            obstacle.collide(self.ball, [self.B, self.friction, -dt])
 
+        self.ball.update(self.B, self.friction, dt)

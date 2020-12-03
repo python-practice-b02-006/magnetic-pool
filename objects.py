@@ -1,7 +1,6 @@
 import pygame
 import numpy as np
 import os
-from main import DT
 
 
 class Ball(pygame.sprite.Sprite):
@@ -26,9 +25,13 @@ class Ball(pygame.sprite.Sprite):
         """Returns absolute value of a velocity"""
         return (self.vel ** 2).sum() ** 0.5
 
-    def update(self):
-        self.pos = self.pos + self.vel * DT
-        self.rect.pos = self.pos.astype(int)
+    def update(self, b, friction, dt):
+        b = np.array([0, 0, b])
+        self.pos += self.vel * dt
+        self.vel += np.resize(np.cross(self.vel, b), 2) * dt
+        if np.linalg.norm(self.vel) != 0:
+            self.vel -= friction * self.vel / np.linalg.norm(self.vel) * dt
+        self.rect = self.image.get_rect(center=self.pos.astype(int))
 
     def flip_vel(self, axis, coef_perp=1, coef_par=1):
         """
@@ -92,7 +95,7 @@ class Cue(pygame.sprite.Sprite):
 
     def update(self, mouse_pos):
         mouse_vector = np.array(mouse_pos) - self.pos
-        self.direction = mouse_vector / (mouse_vector ** 2).sum()
+        self.direction = mouse_vector / (mouse_vector ** 2).sum() ** 0.5
 
         angle = np.arctan2(*self.direction[::-1])
 
@@ -138,9 +141,9 @@ class Obstacle(pygame.sprite.Sprite):
         super().__init__(group)
         self.vertices = np.array(vertices)
 
-        self.tangent = np.array([self.vertices[i-1] - self.vertices[i] for i in range(len(self.vertices))])
-        self.tangent = self.tangent / np.linalg.norm(self.tangent)
-        # нормаль можно сделать поворотом всех в одну сторону.
+        self.tangent = np.array([(self.vertices[i-1] - self.vertices[i]) /
+                                 np.linalg.norm(self.vertices[i-1] - self.vertices[i])
+                                 for i in range(len(self.vertices))])
         self.normal = np.array([[self.tangent[i][1], -self.tangent[i][0]] for i in range(len(self.vertices))])
 
         self.fill_color = fill_color
@@ -151,7 +154,7 @@ class Obstacle(pygame.sprite.Sprite):
         pygame.draw.polygon(self.image, border_color, vertices, 1)
         self.rect = self.image.get_rect(topleft=(0, 0))
 
-    def collide(self, ball):
+    def collide(self, ball, update_args):
         distance = np.infty
         # point where the collision happens
         point = np.zeros(2, dtype=float)
@@ -159,35 +162,40 @@ class Obstacle(pygame.sprite.Sprite):
             r_1 = self.vertices[i] - ball.pos
             r_2 = self.vertices[i-1] - ball.pos
             if np.dot(r_1, self.tangent[i])*np.dot(r_2, self.tangent[i]) < 0:
-                dist = np.dot(r_1, self.normal[i])
-                # нормаль может быть неправильного знака
+                dist = abs(np.dot(r_1, self.normal[i]))
                 p = ball.pos + dist * self.normal[i]
+                n = self.normal[i]
             else:
                 dist = min(np.linalg.norm(r_1), np.linalg.norm(r_2))
                 if dist == np.linalg.norm(r_1):
                     p = self.vertices[i]
+                    n = self.normal[i]
                 else:
                     p = self.vertices[i-1]
+                    n = self.normal[i]
             if dist < distance:
                 point = p
                 distance = dist
+                normal = n
+        if distance > ball.radius:
+            return
         collision_axis = ball.pos - point
+        ball.update(*update_args)
         ball.flip_vel(collision_axis)
 
 
 def rotate(surface, angle, pivot, offset):
     """Rotate the surface around the pivot point.
     Args:
-        surface (pygame.Surface): The surface that is to be rotated.
-        angle (float): Rotate by this angle.
-        pivot (tuple, list, pygame.math.Vector2): The pivot point.
-        offset (pygame.math.Vector2): This vector is added to the pivot.
+        surface (pygame.Surface): surface to be rotated.
+        angle (float): degrees.
+        pivot (tuple: pivot point coords.
+        offset (pygame.math.Vector2): this vector is added to the pivot.
     """
-    rotated_image = pygame.transform.rotate(surface, -angle)  # Rotate the image.
-    rotated_offset = offset.rotate(angle)  # Rotate the offset vector.
-    # Add the offset vector to the center/pivot point to shift the rect.
-    rect = rotated_image.get_rect(center=pivot+rotated_offset)
-    return rotated_image, rect  # Return the rotated image and shifted rect.
+    rotated_image = pygame.transform.rotate(surface, -angle)
+    rotated_offset = offset.rotate(angle)
+    rect = rotated_image.get_rect(center=pivot + rotated_offset)
+    return rotated_image, rect
 
 
 def load_image(name, colorkey=None):
