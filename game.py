@@ -8,7 +8,7 @@ from main import WINDOW_SIZE, BG_COLOR
 class Game:
     def __init__(self, level):
         """Creates a game:
-        1) Reads data about this level from file. Creates a map of the level (self.map) and puts it on the surface
+        1) Reads data about this level from file. Creates a map of the level and puts it on the surface
         self.field.
         2) Creates a ball at the starting position, creates a target, puts them on self.field.
 
@@ -25,7 +25,7 @@ class Game:
         self.ball = None
         self.cue = None
         self.pocket = None
-        self.edge = None
+        self.obstacles = None
         self.map_data = data.read_map(level)
         self.make_map()
 
@@ -35,7 +35,12 @@ class Game:
         self.ball = objects.Ball(self.all_sprites, 10, self.map_data[0])
         self.cue = objects.Cue(self.all_sprites, self.ball.pos, max_vel=5)
         self.pocket = objects.Pocket(self.all_sprites, 10, self.map_data[1])
-        self.edge = objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[2])
+        # edges of the field
+        self.obstacles = [objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[2])]
+        # obstacles on the field
+        for obstacle in self.map_data[3]:
+            self.obstacles.append(objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[2],
+                                                   fill_color=pygame.Color("white")))
 
         self.draw_on_field()
 
@@ -66,4 +71,7 @@ class Game:
 
         self.cue.update(pygame.mouse.get_pos())
         self.cue.pos = self.ball.pos
+
+        for obstacle in self.obstacles:
+            obstacle.collide(self.ball)
 

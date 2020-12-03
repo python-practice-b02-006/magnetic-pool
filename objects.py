@@ -20,15 +20,26 @@ class Ball(pygame.sprite.Sprite):
 
         self.image = pygame.Surface((2 * radius, 2 * radius), pygame.SRCALPHA)
         pygame.draw.circle(self.image, color, (radius, radius), radius)
-        self.rect = self.image.get_rect(center=pos)
+        self.rect = self.image.get_rect(center=self.pos.astype(int))
 
     def vel_value(self):
-        """Returns absolute value of a velosity"""
+        """Returns absolute value of a velocity"""
         return (self.vel ** 2).sum() ** 0.5
 
     def update(self):
         self.pos = self.pos + self.vel * DT
-        self.rect.pos = self.pos
+        self.rect.pos = self.pos.astype(int)
+
+    def flip_vel(self, axis, coef_perp=1, coef_par=1):
+        """
+        Changes the velocity of the ball as if it collided inelastically with a wall with normal vector "axis".
+        """
+        axis = np.array(axis)
+        axis = axis / np.linalg.norm(axis)
+        vel_perp = self.vel.dot(axis) * axis
+        vel_par = self.vel - vel_perp
+        self.vel = -vel_perp * coef_perp + vel_par * coef_par
+
 
 class Cue(pygame.sprite.Sprite):
     """Handles how user hits the ball
@@ -90,6 +101,7 @@ class Cue(pygame.sprite.Sprite):
                                        self.pos,
                                        pygame.Vector2(self.original_image.get_rect().width / 2, 0))
 
+
 class Pocket(pygame.sprite.Sprite):
     """Put ball here to win
 
@@ -124,7 +136,13 @@ class Obstacle(pygame.sprite.Sprite):
                  fill_color=pygame.Color("#0060ff"),
                  border_color=pygame.Color("#fa0041")):
         super().__init__(group)
-        self.vertices = vertices
+        self.vertices = np.array(vertices)
+
+        self.tangent = np.array([self.vertices[i-1] - self.vertices[i] for i in range(len(self.vertices))])
+        self.tangent = self.tangent / np.linalg.norm(self.tangent)
+        # нормаль можно сделать поворотом всех в одну сторону.
+        self.normal = np.array([[self.tangent[i][1], -self.tangent[i][0]] for i in range(len(self.vertices))])
+
         self.fill_color = fill_color
         self.border_color = border_color
 
@@ -132,6 +150,29 @@ class Obstacle(pygame.sprite.Sprite):
         pygame.draw.polygon(self.image, fill_color, vertices, 0)
         pygame.draw.polygon(self.image, border_color, vertices, 1)
         self.rect = self.image.get_rect(topleft=(0, 0))
+
+    def collide(self, ball):
+        distance = np.infty
+        # point where the collision happens
+        point = np.zeros(2, dtype=float)
+        for i in range(len(self.vertices)):
+            r_1 = self.vertices[i] - ball.pos
+            r_2 = self.vertices[i-1] - ball.pos
+            if np.dot(r_1, self.tangent[i])*np.dot(r_2, self.tangent[i]) < 0:
+                dist = np.dot(r_1, self.normal[i])
+                # нормаль может быть неправильного знака
+                p = ball.pos + dist * self.normal[i]
+            else:
+                dist = min(np.linalg.norm(r_1), np.linalg.norm(r_2))
+                if dist == np.linalg.norm(r_1):
+                    p = self.vertices[i]
+                else:
+                    p = self.vertices[i-1]
+            if dist < distance:
+                point = p
+                distance = dist
+        collision_axis = ball.pos - point
+        ball.flip_vel(collision_axis)
 
 
 def rotate(surface, angle, pivot, offset):
@@ -147,6 +188,7 @@ def rotate(surface, angle, pivot, offset):
     # Add the offset vector to the center/pivot point to shift the rect.
     rect = rotated_image.get_rect(center=pivot+rotated_offset)
     return rotated_image, rect  # Return the rotated image and shifted rect.
+
 
 def load_image(name, colorkey=None):
     fullname = os.path.join(os.path.dirname(__file__), 'images', name)
