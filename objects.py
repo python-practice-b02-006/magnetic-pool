@@ -28,8 +28,10 @@ class Ball(pygame.sprite.Sprite):
     def update(self, b, friction, dt):
         b = np.array([0, 0, b])
         self.pos += self.vel * dt
+        vel_abs = np.linalg.norm(self.vel)
         self.vel += np.resize(np.cross(self.vel, b), 2) * dt
         if np.linalg.norm(self.vel) != 0:
+            self.vel = self.vel / np.linalg.norm(self.vel) * vel_abs
             self.vel -= friction * self.vel / np.linalg.norm(self.vel) * dt
         self.rect = self.image.get_rect(center=self.pos.astype(int))
 
