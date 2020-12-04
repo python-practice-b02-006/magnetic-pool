@@ -22,6 +22,8 @@ class Game:
 
         self.all_sprites = pygame.sprite.Group()
 
+        self.win = False
+
         self.ball = None
         self.cue = None
         self.pocket = None
@@ -49,15 +51,19 @@ class Game:
         self.field.fill(BG_COLOR)
         for i in range(len(self.obstacles)):
             self.field.blit(self.obstacles[i].image, (0, 0))
-        self.field.blit(self.ball.image,
-                        (self.ball.pos[0] - self.ball.radius,
-                         self.ball.pos[1] - self.ball.radius))
+        if not self.win:
+            self.field.blit(self.ball.image,
+                            (self.ball.pos[0] - self.ball.radius,
+                             self.ball.pos[1] - self.ball.radius))
         self.field.blit(self.pocket.image,
                         (self.pocket.pos[0] - self.pocket.radius,
                          self.pocket.pos[1] - self.pocket.radius))
-        if self.ball.vel_value() < 0.01:
+        if self.ball.vel_value() < 0.01 and not self.win:
             self.field.blit(self.cue.image, self.cue.rect)
             self.ball.vel = np.zeros(2, dtype=float)
+
+        if self.win:
+            self.field.blit(win_screen(), (0, 0))
 
     def update(self, events, dt):
         """
@@ -83,15 +89,14 @@ class Game:
         self.ball.update(self.B, self.friction, dt)
 
         if self.pocket.check_win(self.ball.pos):
-            print(1)
-            # win_screen(screen)
+            self.ball.vel = np.zeros(2, dtype=float)
+            self.win = True
 
 
-def win_screen(screen):
+def win_screen():
     # зарозовим экран
     fg = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
     fg.fill((224, 99, 201, 128))
-    screen.blit(fg, (0, 0))
 
     # выведем информацию
     text = ["YOU WIN"]
@@ -104,15 +109,6 @@ def win_screen(screen):
         line_rect.top = text_coord
         line_rect.x = (WINDOW_SIZE[0] - string_rendered.get_width()) // 2
         text_coord += line_rect.height
-        screen.blit(string_rendered, line_rect)
+        fg.blit(string_rendered, line_rect)
 
-    run = True
-    clock = pygame.time.Clock()
-    while run:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                terminate()
-            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                run = False
-        pygame.display.flip()
-        clock.tick(FPS)
+    return fg
