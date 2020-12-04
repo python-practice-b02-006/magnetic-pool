@@ -17,8 +17,8 @@ class Game:
 
         # part of window where game is played. In the rest of the window are buttons
         self.game_size = (WINDOW_SIZE[0], WINDOW_SIZE[1] - 75)
-        self.field = pygame.Surface(self.game_size)
-        pygame.draw.rect(self.field, pygame.Color("white"), ((0, 0), self.game_size))
+        self.field = pygame.Surface(WINDOW_SIZE)
+        pygame.draw.rect(self.field, pygame.Color("white"), ((0, 0), WINDOW_SIZE))
 
         self.all_sprites = pygame.sprite.Group()
 
@@ -31,11 +31,13 @@ class Game:
         self.map_data = data.read_map(level)
         self.make_map()
 
+        self.score = 11
+
         self.B = 0.05
-        self.friction = 0.005
+        self.friction = 0.01
 
     def make_map(self):
-        self.ball = objects.Ball(self.all_sprites, 10, (650, 430))
+        self.ball = objects.Ball(self.all_sprites, 10, self.map_data[0])
         self.cue = objects.Cue(self.all_sprites, self.ball.pos, max_vel=15)
         self.pocket = objects.Pocket(self.all_sprites, 20, self.map_data[1])
         # edges of the field
@@ -63,7 +65,7 @@ class Game:
             self.ball.vel = np.zeros(2, dtype=float)
 
         if self.win:
-            self.field.blit(win_screen(), (0, 0))
+            self.field.blit(win_screen(self.score), (0, 0))
 
     def update(self, events, dt):
         """
@@ -75,6 +77,7 @@ class Game:
                 btn = event.button
                 if btn == 1:  # right click
                     self.ball.vel = self.cue.get_vel()
+                    self.score -= 1
                 if btn == 4:  # mousewheel up
                     self.cue.change_value(5)
                 if btn == 5:  # mousewheel down
@@ -93,13 +96,13 @@ class Game:
             self.win = True
 
 
-def win_screen():
+def win_screen(score):
     # зарозовим экран
     fg = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
     fg.fill((224, 99, 201, 128))
 
     # выведем информацию
-    text = ["YOU WIN"]
+    text = ["YOU WIN",  "Score: " + str(score)]
     font = pygame.font.Font(None, 100)
     text_coord = 50
     for line in text:

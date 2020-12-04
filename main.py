@@ -19,11 +19,13 @@ class Manager:
         self.game_on = False
         self.game = None
 
-        self.main_menu_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((350, 275), (100, 50)),
-                                                             text='Start game',
-                                                             manager=self.manager)
-        self.stop_game_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((50, 525), (100, 50)),
-                                                             text='Stop game',
+        self.slb_rect = [pygame.Rect((160, 525), (100, 50)), pygame.Rect((350, 275), (100, 50))]
+        self.select_level_button = pygame_gui.elements.UIButton(relative_rect=self.slb_rect[1],
+                                                                text='Levels',
+                                                                manager=self.manager)
+        self.sgb_rect = [pygame.Rect((50, 525), (100, 50)), pygame.Rect((350, 335), (100, 50))]
+        self.stop_game_button = pygame_gui.elements.UIButton(relative_rect=self.sgb_rect[0],
+                                                             text='Main menu',
                                                              manager=self.manager,
                                                              visible=0)
 
@@ -34,11 +36,12 @@ class Manager:
         self.manager.update(DT)
 
         screen.fill(BG_COLOR)
-        self.manager.draw_ui(screen)
 
         if self.game_on:
             self.game.draw_on_field()
-            screen.blit(self.game.field, (25, 0))
+            screen.blit(self.game.field, (0, 0))
+
+        self.manager.draw_ui(screen)
 
     def handle_events(self):
         """
@@ -51,20 +54,32 @@ class Manager:
 
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
-                    if event.ui_element == self.main_menu_button:
-                        self.main_menu_button.visible = 0
+                    if event.ui_element == self.select_level_button:
                         self.stop_game_button.visible = 1
+                        self.stop_game_button.rect = self.sgb_rect[0]
+                        self.stop_game_button.rebuild()
+                        self.select_level_button.visible = 1
+                        self.select_level_button.rect = self.slb_rect[0]
+                        self.select_level_button.rebuild()
                         self.game_on = True
                         self.game = game.Game(1)
                     if event.ui_element == self.stop_game_button:
-                        self.main_menu_button.visible = 1
+                        self.select_level_button.visible = 1
+                        self.select_level_button.rect = self.slb_rect[1]
+                        self.select_level_button.rebuild()
                         self.stop_game_button.visible = 0
                         self.game_on = False
                         self.game = None
 
             self.manager.process_events(event)
         if self.game_on:
-            self.game.update(events, DT)
+            if not self.game.win:
+                self.game.update(events, DT)
+            else:
+                self.stop_game_button.rect = self.sgb_rect[1]
+                self.stop_game_button.rebuild()
+                self.select_level_button.rect = self.slb_rect[1]
+                self.select_level_button.rebuild()
 
 
 def main():
