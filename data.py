@@ -5,7 +5,7 @@ def read_map(level):
     """
     inp = open("levels/level_" + str(level) + ".txt", 'r')
 
-    ball_pos, pocket_pos, edge, obstacle = [], [], [], []
+    ball_pos, pocket_pos, edge, obstacles = [], [], [], []
 
     for line in inp:
         if len(line.strip()) == 0 or line[0] == '#':
@@ -20,9 +20,11 @@ def read_map(level):
             for i in range(1, len(line), 2):
                 edge.append([int(line[i]), int(line[i+1])])
         elif line[0] == "obstacle":
+            obstacle = []
             for i in range(1, len(line), 2):
                 obstacle.append([int(line[i]), int(line[i + 1])])
+            obstacles.append(obstacle)
 
     inp.close()
 
-    return [ball_pos, pocket_pos, edge, obstacle]
+    return [ball_pos, pocket_pos, edge, obstacles]

@@ -39,8 +39,8 @@ class Game:
         # edges of the field
         self.obstacles = [objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[2])]
         # obstacles on the field
-        for obstacle in self.map_data[3]:
-            self.obstacles.append(objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[2],
+        for i, obstacle in enumerate(self.map_data[3]):
+            self.obstacles.append(objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[3][i],
                                                    fill_color=pygame.Color("white")))
 
         self.draw_on_field()
