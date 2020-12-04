@@ -2,7 +2,7 @@ import pygame
 import objects
 import data
 import numpy as np
-from main import WINDOW_SIZE, BG_COLOR
+from main import WINDOW_SIZE, BG_COLOR, FPS
 
 
 class Game:
@@ -33,9 +33,9 @@ class Game:
         self.friction = 0.005
 
     def make_map(self):
-        self.ball = objects.Ball(self.all_sprites, 10, self.map_data[0])
-        self.cue = objects.Cue(self.all_sprites, self.ball.pos, max_vel=5)
-        self.pocket = objects.Pocket(self.all_sprites, 10, self.map_data[1])
+        self.ball = objects.Ball(self.all_sprites, 10, (650, 430))
+        self.cue = objects.Cue(self.all_sprites, self.ball.pos, max_vel=15)
+        self.pocket = objects.Pocket(self.all_sprites, 20, self.map_data[1])
         # edges of the field
         self.obstacles = [objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[2])]
         # obstacles on the field
@@ -53,8 +53,8 @@ class Game:
                         (self.ball.pos[0] - self.ball.radius,
                          self.ball.pos[1] - self.ball.radius))
         self.field.blit(self.pocket.image,
-                        (self.pocket.pos[0] - self.ball.radius,
-                         self.pocket.pos[1] - self.ball.radius))
+                        (self.pocket.pos[0] - self.pocket.radius,
+                         self.pocket.pos[1] - self.pocket.radius))
         if self.ball.vel_value() < 0.01:
             self.field.blit(self.cue.image, self.cue.rect)
             self.ball.vel = np.zeros(2, dtype=float)
@@ -81,3 +81,38 @@ class Game:
             obstacle.collide(self.ball, [self.B, self.friction, -dt])
 
         self.ball.update(self.B, self.friction, dt)
+
+        if self.pocket.check_win(self.ball.pos):
+            print(1)
+            # win_screen(screen)
+
+
+def win_screen(screen):
+    # зарозовим экран
+    fg = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
+    fg.fill((224, 99, 201, 128))
+    screen.blit(fg, (0, 0))
+
+    # выведем информацию
+    text = ["YOU WIN"]
+    font = pygame.font.Font(None, 100)
+    text_coord = 50
+    for line in text:
+        string_rendered = font.render(line, 1, pygame.Color('#fff500'))
+        line_rect = string_rendered.get_rect()
+        text_coord += 10
+        line_rect.top = text_coord
+        line_rect.x = (WINDOW_SIZE[0] - string_rendered.get_width()) // 2
+        text_coord += line_rect.height
+        screen.blit(string_rendered, line_rect)
+
+    run = True
+    clock = pygame.time.Clock()
+    while run:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                run = False
+        pygame.display.flip()
+        clock.tick(FPS)

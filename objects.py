@@ -122,6 +122,9 @@ class Pocket(pygame.sprite.Sprite):
         pygame.draw.circle(self.image, pygame.Color("black"), (radius, radius), radius)
         self.rect = self.image.get_rect(center=pos)
 
+    def check_win(self, ball_pos):
+       return ((ball_pos - self.pos) ** 2).sum() <= self.radius ** 2
+
     def update(self):
         pass
 
