@@ -2,7 +2,8 @@ import pygame
 import objects
 import data
 import numpy as np
-from main import WINDOW_SIZE, BG_COLOR, FPS
+from main import WINDOW_SIZE, BG_COLOR
+import os
 
 
 class Game:
@@ -15,8 +16,6 @@ class Game:
         :param level: number of level.
         """
 
-        # part of window where game is played. In the rest of the window are buttons
-        self.game_size = (WINDOW_SIZE[0], WINDOW_SIZE[1] - 75)
         self.field = pygame.Surface(WINDOW_SIZE)
         pygame.draw.rect(self.field, pygame.Color("white"), ((0, 0), WINDOW_SIZE))
 
@@ -29,14 +28,27 @@ class Game:
         self.pocket = None
         self.obstacles = None
         self.map_data = data.read_map(level)
-        self.make_map()
-
+        self.make_map(level)
         self.score = 11
 
         self.B = 0.05
         self.friction = 0.01
 
-    def make_map(self):
+    def save_map(self, level):
+        field = self.field.subsurface(self.obstacles[0].polygon_rect)
+        field_rect = np.array([field.get_rect()[2], field.get_rect()[3]])
+        button_size = np.array([((WINDOW_SIZE[0] - 30 * 4) // 4), (WINDOW_SIZE[1] - 75 - 20 * 3) // 3])
+        coefficients = field_rect/button_size
+        if coefficients[0] > coefficients[1]:
+            field = pygame.transform.smoothscale(field,
+                                                 (field_rect / coefficients[0]).astype(int))
+        else:
+            field = pygame.transform.smoothscale(field,
+                                                 (field_rect / coefficients[1]).astype(int))
+        pygame.image.save_extended(field, os.path.join(os.path.dirname(__file__),
+                                                       'images/levels', "level_" + str(level) + ".png"))
+
+    def make_map(self, level):
         self.ball = objects.Ball(self.all_sprites, 10, self.map_data[0])
         self.cue = objects.Cue(self.all_sprites, self.ball.pos, max_vel=15)
         self.pocket = objects.Pocket(self.all_sprites, 20, self.map_data[1])
@@ -48,6 +60,7 @@ class Game:
                                                    fill_color=pygame.Color("white")))
 
         self.draw_on_field()
+        self.save_map(level)
 
     def draw_on_field(self):
         self.field.fill(BG_COLOR)

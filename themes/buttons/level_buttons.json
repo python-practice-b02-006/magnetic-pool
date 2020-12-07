@@ -1,0 +1,44 @@
+ {
+     "level_1":
+     {
+         "colours":
+         {
+             "normal_bg": "#ffffff",
+             "hovered_bg": "#eeeeee",
+             "normal_border": "#AAAAAA",
+             "hovered_border": "#B0B0B0"
+         },
+         "images":
+         {
+             "normal_image": {
+                 "path": "images\\levels\\level_1.png"
+             }
+         },
+         "misc":
+         {
+             "border_width": "2",
+             "shadow_width": "0"
+         }
+     },
+     "level_2":
+     {
+         "colours":
+         {
+             "normal_bg": "#ffffff",
+             "hovered_bg": "#eeeeee",
+             "normal_border": "#AAAAAA",
+             "hovered_border": "#B0B0B0"
+         },
+         "images":
+         {
+             "normal_image": {
+                 "path": "images\\levels\\level_2.png"
+             }
+         },
+         "misc":
+         {
+             "border_width": "2",
+             "shadow_width": "0"
+         }
+     }
+ }

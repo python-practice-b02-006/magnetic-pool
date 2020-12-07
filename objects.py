@@ -47,17 +47,17 @@ class Ball(pygame.sprite.Sprite):
 
 
 class Cue(pygame.sprite.Sprite):
-    """Handles how user hits the ball
+    """Handles how user hits the ball.
 
     Attributes:
-        pos numpy(int, int): position where arrow tail sits
-        max_vel (int): maximum initial velocity
-        value (int[0, 100]): percentage of initial velocity
-                             the ball is going to have after hit
-        direction (float, float): cos, sin of angle between x axis and
-                                  direction of a hit
+        pos numpy(int, int): position where arrow tail sits.
+        max_vel (int): maximum initial velocity.
+        value (int[0, 100]): percentage of initial velocity.
+                             the ball is going to have after hit.
+        direction (float, float): cos, sin of angle between x axis and.
+                                  direction of a hit.
     """
-    def __init__(self, group, pos, max_vel=5):
+    def __init__(self, group, pos, max_vel=3):
         super().__init__(group)
         self.pos = pos
         self.value = 30
@@ -125,9 +125,6 @@ class Pocket(pygame.sprite.Sprite):
     def check_win(self, ball_pos):
        return ((ball_pos - self.pos) ** 2).sum() <= self.radius ** 2
 
-    def update(self):
-        pass
-
 
 class Obstacle(pygame.sprite.Sprite):
     """An object to stop ball. Draws a polygon on a
@@ -154,7 +151,7 @@ class Obstacle(pygame.sprite.Sprite):
         self.border_color = border_color
 
         self.image = pygame.Surface(window_size, pygame.SRCALPHA)
-        pygame.draw.polygon(self.image, fill_color, vertices, 0)
+        self.polygon_rect = pygame.draw.polygon(self.image, fill_color, vertices, 0)
         pygame.draw.polygon(self.image, border_color, vertices, 1)
         self.rect = self.image.get_rect(topleft=(0, 0))
 

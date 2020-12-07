@@ -1,3 +1,6 @@
+import os
+
+
 def read_map(level):
     """Reads data from file about borders and positions of ball and pocket.
 
@@ -28,3 +31,11 @@ def read_map(level):
     inp.close()
 
     return [ball_pos, pocket_pos, edge, obstacles]
+
+
+def number_of_levels():
+    """
+
+    :return: number of levels available.
+    """
+    return len(os.listdir(path=os.path.join(os.path.dirname(__file__), 'levels')))
