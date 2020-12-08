@@ -128,3 +128,47 @@ def win_screen(score):
         fg.blit(string_rendered, line_rect)
 
     return fg
+
+
+class Constructor:
+    """Implements interactive creating of levels."""
+    def __init__(self):
+        self.field = pygame.Surface(WINDOW_SIZE)
+
+        self.pocket = None
+        self.ball = None
+        self.edge = None
+        self.obstacles = None
+        # stage = 0 - drawing edge
+        # stage = 1 - drawing obstacles (optional)
+        # stage = 2 - picking where pocket is
+        # stage = 3 - picking where starting ball position is
+        # stage = 4 - end creating level
+        self.stage = 0
+
+    def update(self, events):
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if self.stage == 0:
+                    pass
+                elif self.stage == 1:
+                    pass
+                elif self.stage == 2:
+                    pass
+                elif self.stage == 3:
+                    pass
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RIGHT:
+                    self.stage += 1
+                    # что-то происходит, например создается объект поля, оно приклеевается к field
+                elif event.key == pygame.K_LEFT:
+                    if self.stage >= 1:
+                        self.stage -= 1
+
+        if self.stage == 4:
+            # вызывается функция data.save_level_data()
+            pass
+
+    def make_level_button_theme(self):
+        pass
+

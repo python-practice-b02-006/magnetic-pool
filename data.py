@@ -33,6 +33,10 @@ def read_map(level):
     return [ball_pos, pocket_pos, edge, obstacles]
 
 
+def save_level_data():
+    pass
+
+
 def number_of_levels():
     """
 
