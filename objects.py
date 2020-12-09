@@ -142,18 +142,21 @@ class Obstacle(pygame.sprite.Sprite):
         super().__init__(group)
         self.vertices = np.array(vertices)
 
-        self.fill_color = fill_color
-        self.border_color = border_color
-
-        self.image = pygame.Surface(window_size, pygame.SRCALPHA)
-        if len(self.vertices) >= 3:
+        if len(self.vertices) >= 2:
             self.tangent = np.array([(self.vertices[i - 1] - self.vertices[i]) /
                                      np.linalg.norm(self.vertices[i - 1] - self.vertices[i])
                                      for i in range(len(self.vertices))])
             self.normal = np.array([[self.tangent[i][1], -self.tangent[i][0]] for i in range(len(self.vertices))])
 
+        self.fill_color = fill_color
+        self.border_color = border_color
+
+        self.image = pygame.Surface(window_size, pygame.SRCALPHA)
+        if len(self.vertices) >= 3:
             self.polygon_rect = pygame.draw.polygon(self.image, fill_color, vertices, 0)
             pygame.draw.polygon(self.image, border_color, vertices, 1)
+        elif len(self.vertices) == 2:
+            pygame.draw.line(self.image, border_color, vertices[0], vertices[1], 1)
         self.rect = self.image.get_rect(topleft=(0, 0))
 
     def collide(self, ball, update_args):

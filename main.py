@@ -76,7 +76,7 @@ class Manager:
             screen.blit(self.game.field, (0, 0))
 
         if self.construction:
-            if self.constructor.obstacles is not None:
+            if len(self.constructor.obstacles) >= 0:
                 self.constructor.draw()
             screen.blit(self.constructor.field, (0, 0))
 

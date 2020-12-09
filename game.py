@@ -146,9 +146,17 @@ class Constructor:
         # stage = 3 - end creating level
         self.stage = 0
         self.obstacle_number = 0
+        self.line_pos = []
 
     def update(self, events):
         for event in events:
+            if event.type == pygame.MOUSEMOTION:
+                if self.stage == 0:
+                    if len(self.obstacles) > self.obstacle_number \
+                            and len(self.obstacles[self.obstacle_number].vertices) > 0:
+                        start_pos = [self.obstacles[self.obstacle_number].vertices[-1],
+                                     self.obstacles[self.obstacle_number].vertices[0]]
+                        self.line_pos = [[start_pos[0], event.pos], [start_pos[1], event.pos]]
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     if self.stage == 0:
@@ -182,6 +190,7 @@ class Constructor:
                         self.stage -= 1
                 elif event.key == pygame.K_SPACE:
                     self.obstacle_number += 1
+                    self.line_pos = []
 
         if self.stage == 3:
             # вызывается функция data.save_level_data()
@@ -191,6 +200,9 @@ class Constructor:
         self.field.fill(BG_COLOR)
         for i in range(len(self.obstacles)):
             self.field.blit(self.obstacles[i].image, (0, 0))
+        if self.stage == 0 and len(self.line_pos) > 0:
+            pygame.draw.line(self.field, pygame.Color("#fa0041"), self.line_pos[0][0], self.line_pos[0][1], 1)
+            pygame.draw.line(self.field, pygame.Color("#fa0041"), self.line_pos[1][0], self.line_pos[1][1], 1)
 
     def make_level_button_theme(self):
         pass
