@@ -89,20 +89,26 @@ class Game:
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 btn = event.button
-                if btn == 1 and self.ball.vel_value() == 0:  # right click
-                    self.ball.vel = self.cue.get_vel()
-                    self.score -= 1
-                if self.B.rect.collidepoint(event.pos):
+                if self.ball.vel_value() == 0:
+                    if btn == 1:  # rightclick
+                        self.ball.vel = self.cue.get_vel()
+                        self.score -= 1
+                    if self.B.rect.collidepoint(event.pos):
+                        if btn == 4:  # mousewheel up
+                            self.B.change_value(1)
+                        if btn == 5:  # mousewheel down
+                            self.B.change_value(-1)
+                    else:
+                        if self.ball.vel_value() == 0:
+                            if btn == 4:  # mousewheel up
+                                self.cue.change_value(5)
+                            if btn == 5:  # mousewheel down
+                                self.cue.change_value(-5)
+                else:
                     if btn == 4:  # mousewheel up
                         self.B.change_value(1)
                     if btn == 5:  # mousewheel down
                         self.B.change_value(-1)
-                else:
-                    if self.ball.vel_value() == 0:
-                        if btn == 4:  # mousewheel up
-                            self.cue.change_value(5)
-                        if btn == 5:  # mousewheel down
-                            self.cue.change_value(-5)
 
         self.cue.update(pygame.mouse.get_pos())
         self.cue.pos = self.ball.pos

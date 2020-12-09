@@ -187,8 +187,10 @@ class Obstacle(pygame.sprite.Sprite):
 class MagneticField():
     """
     manages magnetic field and creates it's image to blit on screen.
-    in order to change field value put your mouse inside red border and
-    scroll the mousewheel
+    in order to change field value while ball isnt moving put your mouse
+    inside red border and scroll the mousewheel
+
+    when ball is running no matter where you scroll
     Attributes:
         value (int): initial value of field
         max_height (int): height of the image
