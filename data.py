@@ -1,4 +1,7 @@
 import os
+import pygame
+from main import WINDOW_SIZE
+import numpy as np
 
 
 def read_map(level):
@@ -31,6 +34,42 @@ def read_map(level):
     inp.close()
 
     return [ball_pos, pocket_pos, edge, obstacles]
+
+
+def save_map(field, level):
+    """Saves field of the level to folder images/levels"""
+    field_rect = np.array([field.get_rect()[2], field.get_rect()[3]])
+    button_size = np.array([((WINDOW_SIZE[0] - 30 * 4) // 4), (WINDOW_SIZE[1] - 75 - 20 * 3) // 3])
+    coefficients = field_rect/button_size
+    if coefficients[0] > coefficients[1]:
+        field = pygame.transform.smoothscale(field,
+                                             (field_rect / coefficients[0]).astype(int))
+    else:
+        field = pygame.transform.smoothscale(field,
+                                             (field_rect / coefficients[1]).astype(int))
+    pygame.image.save_extended(field, os.path.join(os.path.dirname(__file__),
+                                                   'images/levels', "level_" + str(level) + ".png"))
+
+
+def save_level_data(constructor):
+    """Saves data about level field to file in folder levels"""
+    output = open("levels/level_" + str(constructor.level) + ".txt", 'w')
+
+    ball_data = str(int(constructor.ball.pos[0])) + " " + str(int(constructor.ball.pos[1]))
+    pocket_data = str(int(constructor.pocket.pos[0])) + " " + str(int(constructor.pocket.pos[1]))
+    output.write("ball " + ball_data + "\n")
+    output.write("pocket " + pocket_data + "\n")
+
+    edge_data = ""
+    for vertex in constructor.obstacles[0].vertices:
+        edge_data += str(int(vertex[0])) + " " + str(int(vertex[1])) + " "
+    output.write("edge " + edge_data + "\n")
+
+    for i, obstacle in enumerate(constructor.obstacles[1:]):
+        obstacle_data = ""
+        for vertex in obstacle.vertices:
+            obstacle_data += str(int(vertex[0])) + " " + str(int(vertex[1])) + " "
+        output.write("obstacle " + obstacle_data + "\n")
 
 
 def number_of_levels():

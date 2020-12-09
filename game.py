@@ -35,20 +35,6 @@ class Game:
         self.score = 11
 
 
-    def save_map(self, level):
-        field = self.field.subsurface(self.obstacles[0].polygon_rect)
-        field_rect = np.array([field.get_rect()[2], field.get_rect()[3]])
-        button_size = np.array([((WINDOW_SIZE[0] - 30 * 4) // 4), (WINDOW_SIZE[1] - 75 - 20 * 3) // 3])
-        coefficients = field_rect/button_size
-        if coefficients[0] > coefficients[1]:
-            field = pygame.transform.smoothscale(field,
-                                                 (field_rect / coefficients[0]).astype(int))
-        else:
-            field = pygame.transform.smoothscale(field,
-                                                 (field_rect / coefficients[1]).astype(int))
-        pygame.image.save_extended(field, os.path.join(os.path.dirname(__file__),
-                                                       'images/levels', "level_" + str(level) + ".png"))
-
     def make_map(self, level):
         self.ball = objects.Ball(self.all_sprites, 10, self.map_data[0])
         self.cue = objects.Cue(self.all_sprites, self.ball.pos, max_vel=15)
@@ -61,7 +47,7 @@ class Game:
                                                    fill_color=pygame.Color("white")))
 
         self.draw_on_field()
-        self.save_map(level)
+        data.save_map(self.field.subsurface(self.obstacles[0].polygon_rect), level)
 
     def draw_on_field(self):
         self.field.fill(BG_COLOR)
@@ -142,3 +128,88 @@ def win_screen(score):
         fg.blit(string_rendered, line_rect)
 
     return fg
+
+
+class Constructor:
+    """Implements interactive creating of levels."""
+    def __init__(self, level):
+        self.all_sprites = pygame.sprite.Group()
+
+        self.field = pygame.Surface(WINDOW_SIZE)
+        self.field.fill(BG_COLOR)
+        self.pocket = None
+        self.ball = None
+        self.obstacles = []
+        # stage = 0 - drawing edge and obstacles
+        # stage = 1 - picking where pocket is
+        # stage = 2 - picking where starting ball position is
+        # stage = 3 - end creating level
+        self.stage = 0
+        self.obstacle_number = 0
+        self.line_pos = []
+
+        self.level = level
+
+    def update(self, events):
+        for event in events:
+            if event.type == pygame.MOUSEMOTION:
+                if self.stage == 0:
+                    if len(self.obstacles) > self.obstacle_number \
+                            and len(self.obstacles[self.obstacle_number].vertices) > 0:
+                        start_pos = [self.obstacles[self.obstacle_number].vertices[-1],
+                                     self.obstacles[self.obstacle_number].vertices[0]]
+                        self.line_pos = [[start_pos[0], event.pos], [start_pos[1], event.pos]]
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    if self.stage == 0:
+                        if len(self.obstacles) <= self.obstacle_number:
+                            self.obstacles.append(objects.Obstacle(self.all_sprites, WINDOW_SIZE,
+                                                                   np.array(event.pos, ndmin=2)))
+                        else:
+                            if self.obstacle_number:
+                                fill_color = pygame.Color("white")
+                            else:
+                                fill_color = pygame.Color("#0060ff")
+                            new_vertices = np.concatenate((self.obstacles[self.obstacle_number].vertices,
+                                                           np.array(event.pos, ndmin=2)),
+                                                          axis=0)
+                            self.obstacles[self.obstacle_number] = objects.Obstacle(self.all_sprites, WINDOW_SIZE,
+                                                                                    new_vertices,
+                                                                                    fill_color=fill_color)
+                    elif self.stage == 1:
+                        self.pocket = objects.Pocket(self.all_sprites, 10, event.pos)
+                    elif self.stage == 2:
+                        self.ball = objects.Ball(self.all_sprites, 10, event.pos)
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RIGHT:
+                    if self.stage <= 2:
+                        self.stage += 1
+                elif event.key == pygame.K_LEFT:
+                    if self.stage >= 1:
+                        self.stage -= 1
+                elif event.key == pygame.K_SPACE:
+                    self.obstacle_number += 1
+                    self.line_pos = []
+
+        if self.stage == 3:
+            data.save_level_data(self)
+            data.save_map(self.field.subsurface(self.obstacles[0].polygon_rect), self.level)
+            self.make_level_button_theme()
+
+    def draw(self):
+        self.field.fill(BG_COLOR)
+        if len(self.obstacles) >= 0:
+            for i in range(len(self.obstacles)):
+                self.field.blit(self.obstacles[i].image, (0, 0))
+        if self.stage == 0 and len(self.line_pos) > 0:
+            pygame.draw.line(self.field, pygame.Color("#fa0041"), self.line_pos[0][0], self.line_pos[0][1], 1)
+            pygame.draw.line(self.field, pygame.Color("#fa0041"), self.line_pos[1][0], self.line_pos[1][1], 1)
+        if self.pocket is not None:
+            self.field.blit(self.pocket.image, self.pocket.rect)
+        if self.ball is not None:
+            self.field.blit(self.ball.image, self.ball.rect)
+
+    def make_level_button_theme(self):
+        pass
+
+
