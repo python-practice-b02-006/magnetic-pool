@@ -76,11 +76,12 @@ class Manager:
             screen.blit(self.game.field, (0, 0))
 
         if self.construction:
-            if len(self.constructor.obstacles) >= 0:
-                self.constructor.draw()
+            self.constructor.draw()
             screen.blit(self.constructor.field, (0, 0))
 
         self.manager.draw_ui(screen)
+
+        self.level_number = data.number_of_levels()
 
     def handle_events(self):
         """Handles the events."""
@@ -157,7 +158,7 @@ class Manager:
         for level_button in self.level_buttons:
             level_button.visible = 0
         self.construction = True
-        self.constructor = game.Constructor()
+        self.constructor = game.Constructor(self.level_number + 1)
 
     def win_game(self):
         """Actions after game was won."""
