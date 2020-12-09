@@ -64,7 +64,7 @@ class Cue(pygame.sprite.Sprite):
         self.direction = np.zeros(2, dtype=float)
         self.max_vel = max_vel
 
-        self.image = load_image("arrow.png", -1)
+        self.image = load_image("cue_arrow.png", -1)
         self.original_image = self.image.copy()
         self.rect = self.image.get_rect(center=(self.rect_center()))
 
@@ -183,6 +183,78 @@ class Obstacle(pygame.sprite.Sprite):
         collision_axis = ball.pos - point
         ball.update(*update_args)
         ball.flip_vel(collision_axis)
+
+class MagneticField():
+    """
+    manages magnetic field and creates it's image to blit on screen.
+    in order to change field value put your mouse inside red border and
+    scroll the mousewheel
+    Attributes:
+        value (int): initial value of field
+        max_height (int): height of the image
+        max_value (int): maximum value of field
+        pos (left x, center y): coordinates of the image
+    """
+    def __init__(self, value, max_value=0.15, max_height=200, pos=(10, 300)):
+        self.value = value
+        self.max_value = max_value
+        self.max_height = max_height
+        self.pos = pos
+
+        im = load_image("magnetic_arrow.png", -1)
+        self.arrow = pygame.transform.scale(im, (60, 60))
+        self.min_value = self.arrow.get_size()[1] / self.max_height * self.max_value
+        self.image, self.rect = self.create_image()
+
+    def create_image(self):
+        arrow_width = self.arrow.get_size()[0]
+        main_image = pygame.Surface((arrow_width + 2, 2 * self.max_height + 2), pygame.SRCALPHA)
+        pygame.draw.rect(main_image, pygame.Color("red"), (0, 0, *main_image.get_size()), 1)
+        main_rect = main_image.get_rect()
+        main_rect.centery = self.pos[1]
+        main_rect.left = self.pos[0]
+        if abs(self.value) < self.min_value:
+            return main_image, main_rect
+        image = pygame.Surface((arrow_width, self.get_height()), pygame.SRCALPHA)
+        rect = image.get_rect()
+        rect.bottom = self.max_height
+
+        pygame.draw.rect(image, pygame.Color("#2d34e1"),
+                        (arrow_width // 3, arrow_width // 2,
+                         arrow_width // 3, self.get_height()))
+        image.blit(self.arrow, self.arrow.get_rect(topleft=(0, 0)))
+        if self.value < 0:
+            image = pygame.transform.rotate(image, 180)
+            rect.top = self.max_height
+        main_image.blit(image, rect)
+        return main_image, main_rect
+
+
+    def get_height(self):
+        return abs(self.value) / self.max_value * self.max_height
+
+    def get_value(self):
+        return self.get_height() / self.max_height * self.max_value
+
+    def change_value(self, sign):
+        value = sign * 0.01
+        if value > 0:
+            if self.value == 0:
+                self.value = self.min_value
+            else:
+                self.value += value
+                if self.value > self.max_value:
+                    self.value = self.max_value
+        elif value < 0:
+            if self.value == 0:
+                self.value = -self.min_value
+            else:
+                self.value += value
+                if self.value < -self.max_value:
+                    self.value = -self.max_value
+        if abs(self.value) < self.min_value:
+            self.value = 0
+        self.image, self.rect = self.create_image()
 
 
 def rotate(surface, angle, pivot, offset):

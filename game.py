@@ -27,12 +27,13 @@ class Game:
         self.cue = None
         self.pocket = None
         self.obstacles = None
+        self.B = objects.MagneticField(0.05)
+        self.friction = 0.01
+
         self.map_data = data.read_map(level)
         self.make_map(level)
         self.score = 11
 
-        self.B = 0.05
-        self.friction = 0.01
 
     def save_map(self, level):
         field = self.field.subsurface(self.obstacles[0].polygon_rect)
@@ -70,6 +71,7 @@ class Game:
             self.field.blit(self.ball.image,
                             (self.ball.pos[0] - self.ball.radius,
                              self.ball.pos[1] - self.ball.radius))
+            self.field.blit(self.B.image, self.B.rect)
         self.field.blit(self.pocket.image,
                         (self.pocket.pos[0] - self.pocket.radius,
                          self.pocket.pos[1] - self.pocket.radius))
@@ -85,24 +87,30 @@ class Game:
         Updates positions of the ball and the target.
         """
         for event in events:
-            if self.ball.vel_value() < 0.01 and event.type == pygame.MOUSEBUTTONDOWN:
-                self.ball.vel = np.zeros(2, dtype=float)
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 btn = event.button
-                if btn == 1:  # right click
+                if btn == 1 and self.ball.vel_value() == 0:  # right click
                     self.ball.vel = self.cue.get_vel()
                     self.score -= 1
-                if btn == 4:  # mousewheel up
-                    self.cue.change_value(5)
-                if btn == 5:  # mousewheel down
-                    self.cue.change_value(-5)
+                if self.B.rect.collidepoint(event.pos):
+                    if btn == 4:  # mousewheel up
+                        self.B.change_value(1)
+                    if btn == 5:  # mousewheel down
+                        self.B.change_value(-1)
+                else:
+                    if self.ball.vel_value() == 0:
+                        if btn == 4:  # mousewheel up
+                            self.cue.change_value(5)
+                        if btn == 5:  # mousewheel down
+                            self.cue.change_value(-5)
 
         self.cue.update(pygame.mouse.get_pos())
         self.cue.pos = self.ball.pos
 
         for obstacle in self.obstacles:
-            obstacle.collide(self.ball, [self.B, self.friction, -dt])
+            obstacle.collide(self.ball, [self.B.value, self.friction, -dt])
 
-        self.ball.update(self.B, self.friction, dt)
+        self.ball.update(self.B.value, self.friction, dt)
 
         if self.pocket.check_win(self.ball.pos):
             self.ball.vel = np.zeros(2, dtype=float)
