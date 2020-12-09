@@ -133,42 +133,64 @@ def win_screen(score):
 class Constructor:
     """Implements interactive creating of levels."""
     def __init__(self):
-        self.field = pygame.Surface(WINDOW_SIZE)
+        self.all_sprites = pygame.sprite.Group()
 
+        self.field = pygame.Surface(WINDOW_SIZE)
+        self.field.fill(BG_COLOR)
         self.pocket = None
         self.ball = None
-        self.edge = None
-        self.obstacles = None
-        # stage = 0 - drawing edge
-        # stage = 1 - drawing obstacles (optional)
-        # stage = 2 - picking where pocket is
-        # stage = 3 - picking where starting ball position is
-        # stage = 4 - end creating level
+        self.obstacles = []
+        # stage = 0 - drawing edge and obstacles
+        # stage = 1 - picking where pocket is
+        # stage = 2 - picking where starting ball position is
+        # stage = 3 - end creating level
         self.stage = 0
+        self.obstacle_number = 0
 
     def update(self, events):
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.stage == 0:
-                    pass
-                elif self.stage == 1:
-                    pass
-                elif self.stage == 2:
-                    pass
-                elif self.stage == 3:
-                    pass
+                if event.button == 1:
+                    if self.stage == 0:
+                        if len(self.obstacles) <= self.obstacle_number:
+                            self.obstacles.append(objects.Obstacle(self.all_sprites, WINDOW_SIZE,
+                                                                   np.array(event.pos, ndmin=2)))
+                        else:
+                            if self.obstacle_number:
+                                fill_color = pygame.Color("white")
+                            else:
+                                fill_color = pygame.Color("#0060ff")
+                            new_vertices = np.concatenate((self.obstacles[self.obstacle_number].vertices,
+                                                           np.array(event.pos, ndmin=2)),
+                                                          axis=0)
+                            self.obstacles[self.obstacle_number] = objects.Obstacle(self.all_sprites, WINDOW_SIZE,
+                                                                                    new_vertices,
+                                                                                    fill_color=fill_color)
+                    elif self.stage == 1:
+                        pass
+                    elif self.stage == 2:
+                        pass
+                    elif self.stage == 3:
+                        pass
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RIGHT:
-                    self.stage += 1
+                    if self.stage <= 2:
+                        self.stage += 1
                     # что-то происходит, например создается объект поля, оно приклеевается к field
                 elif event.key == pygame.K_LEFT:
                     if self.stage >= 1:
                         self.stage -= 1
+                elif event.key == pygame.K_SPACE:
+                    self.obstacle_number += 1
 
-        if self.stage == 4:
+        if self.stage == 3:
             # вызывается функция data.save_level_data()
             pass
 
+    def draw(self):
+        self.field.fill(BG_COLOR)
+        for i in range(len(self.obstacles)):
+            self.field.blit(self.obstacles[i].image, (0, 0))
+
     def make_level_button_theme(self):
         pass
-

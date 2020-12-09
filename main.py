@@ -19,7 +19,9 @@ class Manager:
                                             "themes/buttons/level_buttons.json")
         self.running = True
         self.game_on = False
+        self.construction = False
         self.game = None
+        self.constructor = None
 
         self.slb_rect = [pygame.Rect((160, WINDOW_HEIGHT - 50*3//2), (100, 50)),
                          pygame.Rect((WINDOW_WIDTH//2 - 50, WINDOW_HEIGHT//2 - 50), (100, 50))]
@@ -34,6 +36,10 @@ class Manager:
                                                              visible=0)
 
         self.level_buttons = self.make_level_buttons()
+        self.new_level_button = pygame_gui.elements.UIButton(relative_rect=self.slb_rect[0],
+                                                             text='New_level',
+                                                             manager=self.manager,
+                                                             visible=0)
 
     def make_level_pictures(self):
         """Makes pictures of fields of all levels."""
@@ -69,23 +75,27 @@ class Manager:
             self.game.draw_on_field()
             screen.blit(self.game.field, (0, 0))
 
+        if self.construction:
+            if self.constructor.obstacles is not None:
+                self.constructor.draw()
+            screen.blit(self.constructor.field, (0, 0))
+
         self.manager.draw_ui(screen)
 
     def handle_events(self):
-        """
-        Handles the events.
-        """
+        """Handles the events."""
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
                 self.running = False
-
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == self.select_level_button:
                         self.select_level()
                     if event.ui_element == self.main_menu_button:
                         self.main_menu()
+                    if event.ui_element == self.new_level_button:
+                        self.new_level()
                     for i, button in enumerate(self.level_buttons):
                         if event.ui_element == button:
                             self.start_level(i + 1)
@@ -94,43 +104,67 @@ class Manager:
             if not self.game.win:
                 self.game.update(events, DT)
             else:
-                self.main_menu_button.rect = self.mmb_rect[1]
-                self.main_menu_button.rebuild()
-                self.select_level_button.rect = self.slb_rect[1]
-                self.select_level_button.rebuild()
+                self.win_game()
+        if self.construction:
+            if not self.constructor.stage == 3:
+                self.constructor.update(events)
 
     def main_menu(self):
-        """Actions after main menu button was pushed"""
+        """Actions after main menu button was pushed."""
         self.select_level_button.visible = 1
         self.select_level_button.rect = self.slb_rect[1]
         self.select_level_button.rebuild()
         self.main_menu_button.visible = 0
+        self.main_menu_button.rect = self.mmb_rect[0]
+        self.main_menu_button.rebuild()
+        self.new_level_button.visible = 0
         for button in self.level_buttons:
             button.visible = 0
         self.game_on = False
         self.game = None
+        self.construction = False
+        self.constructor = None
 
     def select_level(self):
-        """Actions after select level button was pushed"""
+        """Actions after select level button was pushed."""
         self.main_menu_button.visible = 1
         self.main_menu_button.rect = self.mmb_rect[0]
         self.main_menu_button.rebuild()
         self.select_level_button.visible = 0
-        for button in self.level_buttons:
-            button.visible = 1
-        self.game_on = False
-        self.game = None
-
-    def start_level(self, level):
-        """Actions after a level was selected"""
-        self.select_level_button.visible = 1
         self.select_level_button.rect = self.slb_rect[0]
         self.select_level_button.rebuild()
+        for button in self.level_buttons:
+            button.visible = 1
+        self.new_level_button.visible = 1
+        self.game_on = False
+        self.game = None
+        self.construction = False
+        self.constructor = None
+
+    def start_level(self, level):
+        """Actions after a level was selected."""
+        self.select_level_button.visible = 1
+        self.new_level_button.visible = 0
         for level_button in self.level_buttons:
             level_button.visible = 0
         self.game_on = True
         self.game = game.Game(level)
 
+    def new_level(self):
+        """Actions after construction of a level was started."""
+        self.new_level_button.visible = 0
+        self.select_level_button.visible = 1
+        for level_button in self.level_buttons:
+            level_button.visible = 0
+        self.construction = True
+        self.constructor = game.Constructor()
+
+    def win_game(self):
+        """Actions after game was won."""
+        self.main_menu_button.rect = self.mmb_rect[1]
+        self.main_menu_button.rebuild()
+        self.select_level_button.rect = self.slb_rect[1]
+        self.select_level_button.rebuild()
 
 
 def main():
