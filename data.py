@@ -1,4 +1,7 @@
 import os
+import pygame
+from main import WINDOW_SIZE
+import numpy as np
 
 
 def read_map(level):
@@ -33,7 +36,22 @@ def read_map(level):
     return [ball_pos, pocket_pos, edge, obstacles]
 
 
-def save_level_data():
+def save_map(field, level):
+    """Saves field of the level to folder images/levels"""
+    field_rect = np.array([field.get_rect()[2], field.get_rect()[3]])
+    button_size = np.array([((WINDOW_SIZE[0] - 30 * 4) // 4), (WINDOW_SIZE[1] - 75 - 20 * 3) // 3])
+    coefficients = field_rect/button_size
+    if coefficients[0] > coefficients[1]:
+        field = pygame.transform.smoothscale(field,
+                                             (field_rect / coefficients[0]).astype(int))
+    else:
+        field = pygame.transform.smoothscale(field,
+                                             (field_rect / coefficients[1]).astype(int))
+    pygame.image.save_extended(field, os.path.join(os.path.dirname(__file__),
+                                                   'images/levels', "level_" + str(level) + ".png"))
+
+
+def save_level_data(constructor):
     pass
 
 
