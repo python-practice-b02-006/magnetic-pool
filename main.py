@@ -50,8 +50,8 @@ class Manager:
         """Makes buttons for all levels."""
         width = (WINDOW_WIDTH - 30 * hor) // hor
         height = (WINDOW_HEIGHT - 75 - 20 * vert) // vert
-        coords = [[25 * (2 * (i % hor) + 1) + width * (i % hor),
-                   25 * (2 * ((i//hor) % vert) + 1) + height * ((i//hor) % vert)]
+        coords = [[15 * (2 * (i % hor) + 1) + width * (i % hor),
+                   10 * (2 * ((i//hor) % vert) + 1) + height * ((i//hor) % vert)]
                   for i in range(self.level_number)]
         levels_rect = [pygame.Rect(coords[i], (width, height))
                        for i in range(self.level_number)]
@@ -80,8 +80,7 @@ class Manager:
             screen.blit(self.constructor.field, (0, 0))
 
         self.manager.draw_ui(screen)
-
-        self.level_number = data.number_of_levels()
+        self.update_buttons()
 
     def handle_events(self):
         """Handles the events."""
@@ -166,6 +165,12 @@ class Manager:
         self.main_menu_button.rebuild()
         self.select_level_button.rect = self.slb_rect[1]
         self.select_level_button.rebuild()
+
+    def update_buttons(self):
+        if self.level_number < data.number_of_levels():
+            print(1)
+            self.level_number = data.number_of_levels()
+            self.level_buttons = self.make_level_buttons()
 
 
 def main():

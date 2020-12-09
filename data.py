@@ -52,7 +52,24 @@ def save_map(field, level):
 
 
 def save_level_data(constructor):
-    pass
+    """Saves data about level field to file in folder levels"""
+    output = open("levels/level_" + str(constructor.level) + ".txt", 'w')
+
+    ball_data = str(int(constructor.ball.pos[0])) + " " + str(int(constructor.ball.pos[1]))
+    pocket_data = str(int(constructor.pocket.pos[0])) + " " + str(int(constructor.pocket.pos[1]))
+    output.write("ball " + ball_data + "\n")
+    output.write("pocket " + pocket_data + "\n")
+
+    edge_data = ""
+    for vertex in constructor.obstacles[0].vertices:
+        edge_data += str(int(vertex[0])) + " " + str(int(vertex[1])) + " "
+    output.write("edge " + edge_data + "\n")
+
+    for i, obstacle in enumerate(constructor.obstacles[1:]):
+        obstacle_data = ""
+        for vertex in obstacle.vertices:
+            obstacle_data += str(int(vertex[0])) + " " + str(int(vertex[1])) + " "
+        output.write("obstacle " + obstacle_data + "\n")
 
 
 def number_of_levels():
