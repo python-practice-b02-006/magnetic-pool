@@ -2,7 +2,7 @@ import pygame
 import objects
 import data
 import numpy as np
-from main import WINDOW_SIZE, BG_COLOR
+from main import WINDOW_SIZE, WINDOW_WIDTH, WINDOW_HEIGHT,  BG_COLOR
 import os
 
 
@@ -30,9 +30,11 @@ class Game:
         self.B = objects.MagneticField(0.05)
         self.friction = 0.01
 
+        self.score = 10
+        self.first_hit = True
+
         self.map_data = data.read_map(level)
         self.make_map(level)
-        self.score = 11
 
     def make_map(self, level):
         self.ball = objects.Ball(self.all_sprites, 10, self.map_data[0])
@@ -57,6 +59,7 @@ class Game:
                             (self.ball.pos[0] - self.ball.radius,
                              self.ball.pos[1] - self.ball.radius))
             self.field.blit(self.B.image, self.B.rect)
+            self.display_score()
         self.field.blit(self.pocket.image,
                         (self.pocket.pos[0] - self.pocket.radius,
                          self.pocket.pos[1] - self.pocket.radius))
@@ -67,6 +70,22 @@ class Game:
         if self.win:
             self.field.blit(win_screen(self.score), (0, 0))
 
+    def display_score(self):
+        font = pygame.font.Font(None, 30)
+        text = font.render(f"SCORE: {self.score}", 1, pygame.Color('black'))
+        text_x = 20
+        text_y = 20
+        text_w = text.get_width()
+        text_h = text.get_height()
+        self.field.blit(text, (text_x, text_y))
+        pygame.draw.rect(self.field, (0, 255, 0), (text_x - 10, text_y - 10,
+                                               text_w + 20, text_h + 20), 1)
+
+    def reduce_score(self, value):
+        self.score -= value
+        if self.score < 0:
+            self.score = 0
+
     def update(self, events, dt):
         """
         Updates positions of the ball and the target.
@@ -74,10 +93,16 @@ class Game:
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 btn = event.button
+                if btn == 3: # leftclick
+                    self.B.zero_value()
                 if self.ball.vel_value() == 0:
                     if btn == 1:  # rightclick
+                        if self.first_hit:
+                            self.first_hit = False
+                        else:
+                            self.reduce_score(2)
+
                         self.ball.vel = self.cue.get_vel()
-                        self.score -= 1
                     if self.B.rect.collidepoint(event.pos):
                         if btn == 4:  # mousewheel up
                             self.B.change_value(1)
@@ -98,36 +123,19 @@ class Game:
         self.cue.update(pygame.mouse.get_pos())
         self.cue.pos = self.ball.pos
 
+        collided = False
         for obstacle in self.obstacles:
-            obstacle.collide(self.ball, [self.B.value, self.friction, -dt])
+            if obstacle.collide(self.ball, [self.B.value, self.friction, -dt]):
+                collided = True
+
+        if collided:
+            self.reduce_score(1)
 
         self.ball.update(self.B.value, self.friction, dt)
 
         if self.pocket.check_win(self.ball.pos):
             self.ball.vel = np.zeros(2, dtype=float)
             self.win = True
-
-
-def win_screen(score):
-    # зарозовим экран
-    fg = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
-    fg.fill((224, 99, 201, 128))
-
-    # выведем информацию
-    text = ["YOU WIN",  "Score: " + str(score)]
-    font = pygame.font.Font(None, 100)
-    text_coord = 50
-    for line in text:
-        string_rendered = font.render(line, 1, pygame.Color('#fff500'))
-        line_rect = string_rendered.get_rect()
-        text_coord += 10
-        line_rect.top = text_coord
-        line_rect.x = (WINDOW_SIZE[0] - string_rendered.get_width()) // 2
-        text_coord += line_rect.height
-        fg.blit(string_rendered, line_rect)
-
-    return fg
-
 
 class Constructor:
     """Implements interactive creating of levels."""
@@ -207,3 +215,24 @@ class Constructor:
             self.field.blit(self.pocket.image, self.pocket.rect)
         if self.ball is not None:
             self.field.blit(self.ball.image, self.ball.rect)
+
+
+def win_screen(score):
+    # зарозовим экран
+    fg = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
+    fg.fill((224, 99, 201, 128))
+
+    # выведем информацию
+    text = ["YOU WIN",  "Score: " + str(score)]
+    font = pygame.font.Font(None, 100)
+    text_coord = 50
+    for line in text:
+        string_rendered = font.render(line, 1, pygame.Color('#fff500'))
+        line_rect = string_rendered.get_rect()
+        text_coord += 10
+        line_rect.top = text_coord
+        line_rect.x = (WINDOW_SIZE[0] - string_rendered.get_width()) // 2
+        text_coord += line_rect.height
+        fg.blit(string_rendered, line_rect)
+
+    return fg
