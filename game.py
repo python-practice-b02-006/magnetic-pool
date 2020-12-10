@@ -34,7 +34,6 @@ class Game:
         self.make_map(level)
         self.score = 11
 
-
     def make_map(self, level):
         self.ball = objects.Ball(self.all_sprites, 10, self.map_data[0])
         self.cue = objects.Cue(self.all_sprites, self.ball.pos, max_vel=15)
@@ -194,7 +193,7 @@ class Constructor:
         if self.stage == 3:
             data.save_level_data(self)
             data.save_map(self.field.subsurface(self.obstacles[0].polygon_rect), self.level)
-            self.make_level_button_theme()
+            data.make_level_button_theme(self.level)
 
     def draw(self):
         self.field.fill(BG_COLOR)
@@ -208,8 +207,3 @@ class Constructor:
             self.field.blit(self.pocket.image, self.pocket.rect)
         if self.ball is not None:
             self.field.blit(self.ball.image, self.ball.rect)
-
-    def make_level_button_theme(self):
-        pass
-
-

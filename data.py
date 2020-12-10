@@ -2,6 +2,7 @@ import os
 import pygame
 from main import WINDOW_SIZE
 import numpy as np
+import json
 
 
 def read_map(level):
@@ -70,6 +71,33 @@ def save_level_data(constructor):
         for vertex in obstacle.vertices:
             obstacle_data += str(int(vertex[0])) + " " + str(int(vertex[1])) + " "
         output.write("obstacle " + obstacle_data + "\n")
+    output.close()
+
+
+def make_level_button_theme(level):
+    data = {
+        "button": {
+            "colours": {
+                "normal_bg": "#ffffff",
+                "hovered_bg": "#eeeeee",
+                "normal_border": "#AAAAAA",
+                "hovered_border": "#B0B0B0"
+            },
+            "misc": {
+                "border_width": "2",
+                "shadow_width": "0"
+            }
+        },
+        'level_' + str(level): {
+            "images": {
+                "normal_image": {
+                    "path": "images\\levels\\level_" + str(level) + ".png"
+                }
+            }
+        }
+    }
+    with open("themes/buttons/level_" + str(level) + ".json", "w") as theme_file:
+        json.dump(data, theme_file, indent=4)
 
 
 def number_of_levels():

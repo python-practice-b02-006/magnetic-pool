@@ -188,6 +188,7 @@ class Obstacle(pygame.sprite.Sprite):
         ball.update(*update_args)
         ball.flip_vel(collision_axis)
 
+
 class MagneticField():
     """
     manages magnetic field and creates it's image to blit on screen.
@@ -234,7 +235,6 @@ class MagneticField():
             rect.top = self.max_height
         main_image.blit(image, rect)
         return main_image, main_rect
-
 
     def get_height(self):
         return abs(self.value) / self.max_value * self.max_height

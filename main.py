@@ -16,7 +16,7 @@ class Manager:
         self.level_number = data.number_of_levels()
         self.make_level_pictures()
         self.manager = pygame_gui.UIManager(WINDOW_SIZE,
-                                            "themes/buttons/level_buttons.json")
+                                            "themes/buttons/menu_buttons.json")
         self.running = True
         self.game_on = False
         self.construction = False
@@ -27,24 +27,29 @@ class Manager:
                          pygame.Rect((WINDOW_WIDTH//2 - 50, WINDOW_HEIGHT//2 - 50), (100, 50))]
         self.select_level_button = pygame_gui.elements.UIButton(relative_rect=self.slb_rect[1],
                                                                 text='Levels',
-                                                                manager=self.manager)
+                                                                manager=self.manager,
+                                                                object_id="menu_button")
         self.mmb_rect = [pygame.Rect((50, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
                          pygame.Rect((WINDOW_WIDTH//2 - 50, WINDOW_HEIGHT//2 + 35), (100, 50))]
         self.main_menu_button = pygame_gui.elements.UIButton(relative_rect=self.mmb_rect[0],
                                                              text='Main menu',
                                                              manager=self.manager,
-                                                             visible=0)
+                                                             visible=0,
+                                                             object_id="menu_button")
 
+        self.lb_managers = []
         self.level_buttons = self.make_level_buttons()
         self.new_level_button = pygame_gui.elements.UIButton(relative_rect=self.slb_rect[0],
                                                              text='New_level',
                                                              manager=self.manager,
-                                                             visible=0)
+                                                             visible=0,
+                                                             object_id="menu_button")
 
     def make_level_pictures(self):
         """Makes pictures of fields of all levels."""
         for i in range(self.level_number):
             game.Game(i+1)
+            data.make_level_button_theme(i+1)
 
     def make_level_buttons(self, hor=4, vert=3):
         """Makes buttons for all levels."""
@@ -55,9 +60,11 @@ class Manager:
                   for i in range(self.level_number)]
         levels_rect = [pygame.Rect(coords[i], (width, height))
                        for i in range(self.level_number)]
+        self.lb_managers = [pygame_gui.UIManager(WINDOW_SIZE, "themes/buttons/level_" + str(i+1) + ".json")
+                            for i in range(self.level_number)]
         level_buttons = [pygame_gui.elements.UIButton(relative_rect=levels_rect[i],
                                                       text="",
-                                                      manager=self.manager,
+                                                      manager=self.lb_managers[i],
                                                       visible=0,
                                                       object_id="level_" + str(i+1))
                          for i in range(self.level_number)]
@@ -68,6 +75,8 @@ class Manager:
         self.handle_events()
 
         self.manager.update(DT)
+        for manager in self.lb_managers:
+            manager.update(DT)
 
         screen.fill(BG_COLOR)
 
@@ -80,6 +89,8 @@ class Manager:
             screen.blit(self.constructor.field, (0, 0))
 
         self.manager.draw_ui(screen)
+        for manager in self.lb_managers:
+            manager.draw_ui(screen)
         self.update_buttons()
 
     def handle_events(self):
@@ -100,6 +111,8 @@ class Manager:
                         if event.ui_element == button:
                             self.start_level(i + 1)
             self.manager.process_events(event)
+            for manager in self.lb_managers:
+                manager.process_events(event)
         if self.game_on:
             if not self.game.win:
                 self.game.update(events, DT)
@@ -168,7 +181,6 @@ class Manager:
 
     def update_buttons(self):
         if self.level_number < data.number_of_levels():
-            print(1)
             self.level_number = data.number_of_levels()
             self.level_buttons = self.make_level_buttons()
 
