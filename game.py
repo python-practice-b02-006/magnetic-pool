@@ -230,6 +230,11 @@ class Constructor:
                                                text_w + 20, text_h + 20), 1)
 
 
+class ChaosStudy:
+    def __init__(self, level):
+        pass
+
+
 def win_screen(score):
     # зарозовим экран
     fg = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)

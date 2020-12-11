@@ -5,12 +5,13 @@ import data
 
 WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
 FPS = 60
-DT = FPS/100
+DT = FPS / 100
 BG_COLOR = pygame.Color('white')
 
 
 class Manager:
     """Handles events and switching between menus."""
+
     def __init__(self):
         """Creates buttons, manager, game."""
         self.level_number = data.number_of_levels()
@@ -20,17 +21,20 @@ class Manager:
         self.running = True
         self.game_on = False
         self.construction = False
+        self.chaos_on = False
         self.game = None
         self.constructor = None
+        self.chaos_study = None
+        self.chaos_mode = False
 
-        self.slb_rect = [pygame.Rect((160, WINDOW_HEIGHT - 50*3//2), (100, 50)),
-                         pygame.Rect((WINDOW_WIDTH//2 - 50, WINDOW_HEIGHT//2 - 50), (100, 50))]
+        self.slb_rect = [pygame.Rect((160, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
+                         pygame.Rect((WINDOW_WIDTH // 2 - 50, WINDOW_HEIGHT // 2 - 50), (100, 50))]
         self.select_level_button = pygame_gui.elements.UIButton(relative_rect=self.slb_rect[1],
                                                                 text='Levels',
                                                                 manager=self.manager,
                                                                 object_id="menu_button")
         self.mmb_rect = [pygame.Rect((50, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
-                         pygame.Rect((WINDOW_WIDTH//2 - 50, WINDOW_HEIGHT//2 + 35), (100, 50))]
+                         pygame.Rect((WINDOW_WIDTH // 2 - 50, WINDOW_HEIGHT // 2 + 35), (100, 50))]
         self.main_menu_button = pygame_gui.elements.UIButton(relative_rect=self.mmb_rect[0],
                                                              text='Main menu',
                                                              manager=self.manager,
@@ -40,33 +44,39 @@ class Manager:
         self.lb_managers = []
         self.level_buttons = self.make_level_buttons()
         self.new_level_button = pygame_gui.elements.UIButton(relative_rect=self.slb_rect[0],
-                                                             text='New_level',
+                                                             text='New level',
                                                              manager=self.manager,
                                                              visible=0,
                                                              object_id="menu_button")
+        self.cb_rect = pygame.Rect((270, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50))
+        self.chaos_button = pygame_gui.elements.UIButton(relative_rect=self.cb_rect,
+                                                         text="Chaos",
+                                                         manager=self.manager,
+                                                         visible=0,
+                                                         object_id="menu_button")
 
     def make_level_pictures(self):
         """Makes pictures of fields of all levels."""
         for i in range(self.level_number):
-            game.Game(i+1)
-            data.make_level_button_theme(i+1)
+            game.Game(i + 1)
+            data.make_level_button_theme(i + 1)
 
     def make_level_buttons(self, hor=4, vert=3):
         """Makes buttons for all levels."""
         width = (WINDOW_WIDTH - 30 * hor) // hor
         height = (WINDOW_HEIGHT - 75 - 20 * vert) // vert
         coords = [[15 * (2 * (i % hor) + 1) + width * (i % hor),
-                   10 * (2 * ((i//hor) % vert) + 1) + height * ((i//hor) % vert)]
+                   10 * (2 * ((i // hor) % vert) + 1) + height * ((i // hor) % vert)]
                   for i in range(self.level_number)]
         levels_rect = [pygame.Rect(coords[i], (width, height))
                        for i in range(self.level_number)]
-        self.lb_managers = [pygame_gui.UIManager(WINDOW_SIZE, "themes/buttons/level_" + str(i+1) + ".json")
+        self.lb_managers = [pygame_gui.UIManager(WINDOW_SIZE, "themes/buttons/level_" + str(i + 1) + ".json")
                             for i in range(self.level_number)]
         level_buttons = [pygame_gui.elements.UIButton(relative_rect=levels_rect[i],
                                                       text="",
                                                       manager=self.lb_managers[i],
                                                       visible=0,
-                                                      object_id="level_" + str(i+1))
+                                                      object_id="level_" + str(i + 1))
                          for i in range(self.level_number)]
         return level_buttons
 
@@ -107,9 +117,20 @@ class Manager:
                         self.main_menu()
                     if event.ui_element == self.new_level_button:
                         self.new_level()
+                    if event.ui_element == self.chaos_button:
+                        self.chaos_mode = not self.chaos_mode
+                        if self.chaos_mode:
+                            self.chaos_button.text = "Game"
+                            self.chaos_button.rebuild()
+                        else:
+                            self.chaos_button.text = "Chaos"
+                            self.chaos_button.rebuild()
                     for i, button in enumerate(self.level_buttons):
                         if event.ui_element == button:
-                            self.start_level(i + 1)
+                            if not self.chaos_mode:
+                                self.start_level(i + 1)
+                            else:
+                                self.start_chaos_study(i + 1)
             self.manager.process_events(event)
             for manager in self.lb_managers:
                 manager.process_events(event)
@@ -131,12 +152,15 @@ class Manager:
         self.main_menu_button.rect = self.mmb_rect[0]
         self.main_menu_button.rebuild()
         self.new_level_button.visible = 0
+        self.chaos_button.visible = 0
         for button in self.level_buttons:
             button.visible = 0
         self.game_on = False
         self.game = None
         self.construction = False
         self.constructor = None
+        self.chaos_on = False
+        self.chaos_study = None
 
     def select_level(self):
         """Actions after select level button was pushed."""
@@ -149,15 +173,19 @@ class Manager:
         for button in self.level_buttons:
             button.visible = 1
         self.new_level_button.visible = 1
+        self.chaos_button.visible = 1
         self.game_on = False
         self.game = None
         self.construction = False
         self.constructor = None
+        self.chaos_on = False
+        self.chaos_study = None
 
     def start_level(self, level):
         """Actions after a level was selected."""
         self.select_level_button.visible = 1
         self.new_level_button.visible = 0
+        self.chaos_button.visible = 0
         for level_button in self.level_buttons:
             level_button.visible = 0
         self.game_on = True
@@ -183,6 +211,15 @@ class Manager:
         if self.level_number < data.number_of_levels():
             self.level_number = data.number_of_levels()
             self.level_buttons = self.make_level_buttons()
+
+    def start_chaos_study(self, level):
+        self.select_level_button.visible = 1
+        self.new_level_button.visible = 0
+        self.chaos_button.visible = 0
+        for level_button in self.level_buttons:
+            level_button.visible = 0
+        self.chaos_on = True
+        self.chaos_study = game.ChaosStudy(level)
 
 
 def main():
