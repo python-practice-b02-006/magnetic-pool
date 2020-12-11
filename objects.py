@@ -187,13 +187,17 @@ class Obstacle(pygame.sprite.Sprite):
         collision_axis = ball.pos - point
         ball.update(*update_args)
         ball.flip_vel(collision_axis)
+        return True
 
 
 class MagneticField():
     """
     manages magnetic field and creates it's image to blit on screen.
+
     in order to change field value while ball isnt moving put your mouse
-    inside red border and scroll the mousewheel
+    inside red border and scroll the mousewheel.
+
+    if you click left mouse button field value goes to zero
 
     when ball is running no matter where you scroll
     Attributes:
@@ -260,6 +264,10 @@ class MagneticField():
                     self.value = -self.max_value
         if abs(self.value) < self.min_value:
             self.value = 0
+        self.image, self.rect = self.create_image()
+
+    def zero_value(self):
+        self.value = 0
         self.image, self.rect = self.create_image()
 
 
