@@ -147,10 +147,7 @@ class Constructor:
         self.pocket = None
         self.ball = None
         self.obstacles = []
-        # stage = 0 - drawing edge and obstacles
-        # stage = 1 - picking where pocket is
-        # stage = 2 - picking where starting ball position is
-        # stage = 3 - end creating level
+        self.stages = {0: "obstacles", 1: "pocket", 2: "ball", 3: "done"}
         self.stage = 0
         self.obstacle_number = 0
         self.line_pos = []
@@ -219,6 +216,18 @@ class Constructor:
             self.field.blit(self.pocket.image, self.pocket.rect)
         if self.ball is not None:
             self.field.blit(self.ball.image, self.ball.rect)
+        self.display_stage()
+
+    def display_stage(self):
+        font = pygame.font.Font(None, 30)
+        text = font.render(f"Stage: {self.stages[self.stage]}", 1, pygame.Color('black'))
+        text_x = 20
+        text_y = 20
+        text_w = text.get_width()
+        text_h = text.get_height()
+        self.field.blit(text, (text_x, text_y))
+        pygame.draw.rect(self.field, (0, 255, 0), (text_x - 10, text_y - 10,
+                                               text_w + 20, text_h + 20), 1)
 
 
 def win_screen(score):
