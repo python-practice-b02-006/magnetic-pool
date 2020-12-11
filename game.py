@@ -3,7 +3,6 @@ import objects
 import data
 import numpy as np
 from main import WINDOW_SIZE, BG_COLOR
-import os
 
 
 class Game:
@@ -37,7 +36,7 @@ class Game:
     def make_map(self, level):
         self.ball = objects.Ball(self.all_sprites, 10, self.map_data[0])
         self.cue = objects.Cue(self.all_sprites, self.ball.pos, max_vel=15)
-        self.pocket = objects.Pocket(self.all_sprites, 20, self.map_data[1])
+        self.pocket = objects.Pocket(self.all_sprites, 10, self.map_data[1])
         # edges of the field
         self.obstacles = [objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[2])]
         # obstacles on the field

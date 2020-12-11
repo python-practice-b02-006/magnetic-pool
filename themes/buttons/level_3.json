@@ -1,0 +1,21 @@
+{
+    "button": {
+        "colours": {
+            "normal_bg": "#ffffff",
+            "hovered_bg": "#eeeeee",
+            "normal_border": "#AAAAAA",
+            "hovered_border": "#B0B0B0"
+        },
+        "misc": {
+            "border_width": "2",
+            "shadow_width": "0"
+        }
+    },
+    "level_3": {
+        "images": {
+            "normal_image": {
+                "path": "images\\levels\\level_3.png"
+            }
+        }
+    }
+}
