@@ -21,6 +21,7 @@ class Game:
         self.all_sprites = pygame.sprite.Group()
 
         self.win = False
+        self.level = level
 
         self.ball = None
         self.cue = None
@@ -77,7 +78,7 @@ class Game:
         text_w = text.get_width()
         text_h = text.get_height()
         self.field.blit(text, (text_x, text_y))
-        pygame.draw.rect(self.field, (0, 255, 0), (text_x - 10, text_y - 10,
+        pygame.draw.rect(self.field, pygame.Color("#13a708"), (text_x - 10, text_y - 10,
                                                text_w + 20, text_h + 20), 1)
 
     def reduce_score(self, value):
@@ -135,6 +136,7 @@ class Game:
         if self.pocket.check_win(self.ball.pos):
             self.ball.vel = np.zeros(2, dtype=float)
             self.win = True
+            data.write_score(self.level, self.score)
 
 
 class Constructor:

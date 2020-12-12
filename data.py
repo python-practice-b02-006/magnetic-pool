@@ -3,6 +3,7 @@ import pygame
 from main import WINDOW_SIZE
 import numpy as np
 import json
+import csv
 
 
 def read_map(level):
@@ -48,7 +49,22 @@ def save_map(field, level):
     else:
         field = pygame.transform.smoothscale(field,
                                              (field_rect / coefficients[1]).astype(int))
-    pygame.image.save_extended(field, os.path.join(os.path.dirname(__file__),
+
+    print(level, get_levels_scores())
+    score = get_levels_scores().get(level, 0)
+
+    font = pygame.font.Font(None, 20)
+    text = font.render(f"SCORE: {score}", 1, pygame.Color('#e2a000'))
+    field_w, field_h = field.get_size()
+    new_field = pygame.Surface((field_w, field_h + text.get_height() + 6), pygame.SRCALPHA)
+
+    new_field.blit(field, (0, 0))
+    text_rect = text.get_rect()
+    text_rect.centerx = field_w // 2
+    text_rect.top = field_h + 3
+    new_field.blit(text, text_rect)
+
+    pygame.image.save_extended(new_field, os.path.join(os.path.dirname(__file__),
                                                    'images/levels', "level_" + str(level) + ".png"))
 
 
@@ -105,4 +121,16 @@ def number_of_levels():
 
     :return: number of levels available.
     """
-    return len(os.listdir(path=os.path.join(os.path.dirname(__file__), 'levels')))
+    return len(os.listdir(path=os.path.join(os.path.dirname(__file__), 'levels'))) - 1
+
+def get_levels_scores():
+    with open(os.path.join("levels", "high_scores.txt"), "r",  encoding="utf8") as f:
+        data = {int(x): int(y) for line in f.readlines() for x, y in [tuple(line.split())]}
+    return data
+
+def write_score(level, score):
+    data = get_levels_scores()
+    if data[level] < score:
+        data[level] = score
+        with open(os.path.join("levels", "high_scores.txt"), "w", encoding="utf8") as f:
+            f.write("\n".join([f"{k} {v}" for k, v in data.items()]))
