@@ -124,7 +124,7 @@ class Game:
 
         collided = False
         for obstacle in self.obstacles:
-            if obstacle.collide(self.ball, [self.B.value, self.friction, -dt]):
+            if obstacle.collide(self.ball)[0]:
                 collided = True
 
         if collided:
@@ -239,7 +239,7 @@ class ChaosStudy:
 
         self.all_sprites = pygame.sprite.Group()
 
-        self.ball_number = 1  # number of balls being simulated
+        self.ball_number = 10  # number of balls being simulated is
 
         self.balls = []
         self.cue = None
@@ -251,7 +251,7 @@ class ChaosStudy:
         self.make_map()
 
         self.d_angle = np.pi / 100
-        self.d_coord = 0.1
+        self.d_coord = 5
 
     def make_map(self):
         # edges of the field
@@ -282,7 +282,7 @@ class ChaosStudy:
                 btn = event.button
                 if len(self.balls) == 0:
                     if btn == 1:
-                        self.make_balls(event)
+                        self.make_balls(event, dt)
                         self.cue = objects.Cue(self.all_sprites, self.balls[0].pos, max_vel=15)
                     if self.B.rect.collidepoint(event.pos):
                         if btn == 4:  # mousewheel up
@@ -315,21 +315,40 @@ class ChaosStudy:
         # cycles that check for collisions and put points on map
         for ball in self.balls:
             for obstacle in self.obstacles:
-                if obstacle.collide(ball, [self.B.value, self.friction, -dt]):
+                if obstacle.collide(ball)[0]:
                     # put a point on the map
                     pass
 
         for ball in self.balls:
             ball.update(self.B.value, self.friction, dt)
 
-    def make_balls(self, event):
-        ball_coords = [event.pos]
-        self.balls = [objects.Ball(self.all_sprites, 10, coords) for coords in ball_coords]
+    def make_balls(self, event, dt):
+        ball_coords = [np.array(event.pos)]
+        self.balls.append(objects.Ball(self.all_sprites, 10, ball_coords[0]))
+        for i in range(self.ball_number * 10):
+            if len(self.balls) < self.ball_number:
+                color = pygame.Color(np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255))
+                coords = ball_coords[0] + self.d_coord * (np.random.rand(2) - 0.5 * np.ones(2))
+                new_ball = objects.Ball(self.all_sprites, 10, coords, color=color)
+                collide = False
+                for obstacle in self.obstacles:
+                    if obstacle.collide(new_ball)[0]:
+                        collide = True
+                        break
+                if not collide:
+                    self.balls.append(new_ball)
+            else:
+                break
 
     def set_vel(self, vel):
-        ball_vels = [vel]
-        for i, ball in enumerate(self.balls):
-            ball.vel = ball_vels[i]
+        vel = np.array(vel)
+        for ball in self.balls:
+            if ball == self.balls[0]:
+                ball.vel = vel
+            else:
+                angle = self.d_angle * (np.random.rand() - 0.5)
+                new_vel = np.dot(np.array([[np.cos(angle), np.sin(angle)], [-np.sin(angle), np.cos(angle)]]), vel)
+                ball.vel = new_vel
 
     def boundary_coords(self, point):
         pass

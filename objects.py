@@ -97,15 +97,15 @@ class Cue(pygame.sprite.Sprite):
 
     def update(self, mouse_pos):
         mouse_vector = np.array(mouse_pos) - self.pos
-        if (mouse_vector ** 2).sum() ** 0.5 > 0:
+        if (mouse_vector ** 2).sum() != 0:
             self.direction = mouse_vector / (mouse_vector ** 2).sum() ** 0.5
 
-        angle = np.arctan2(*self.direction[::-1])
+            angle = np.arctan2(*self.direction[::-1])
 
-        self.image, self.rect = rotate(self.filled_arrow(),
-                                       np.degrees(angle),
-                                       self.pos,
-                                       pygame.Vector2(self.original_image.get_rect().width / 2, 0))
+            self.image, self.rect = rotate(self.filled_arrow(),
+                                           np.degrees(angle),
+                                           self.pos,
+                                           pygame.Vector2(self.original_image.get_rect().width / 2, 0))
 
 
 class Pocket(pygame.sprite.Sprite):
@@ -160,7 +160,7 @@ class Obstacle(pygame.sprite.Sprite):
             pygame.draw.line(self.image, border_color, vertices[0], vertices[1], 1)
         self.rect = self.image.get_rect(topleft=(0, 0))
 
-    def collide(self, ball, update_args):
+    def collide(self, ball):
         distance = np.infty
         # point where the collision happens
         point = np.zeros(2, dtype=float)
@@ -169,26 +169,34 @@ class Obstacle(pygame.sprite.Sprite):
             r_2 = self.vertices[i-1] - ball.pos
             if np.dot(r_1, self.tangent[i])*np.dot(r_2, self.tangent[i]) < 0:
                 dist = abs(np.dot(r_1, self.normal[i]))
-                p = ball.pos + dist * self.normal[i]
-                n = self.normal[i]
+                r_perp = - np.dot(self.normal[i], r_1) * self.normal[i]
+                r_perp = r_perp / np.linalg.norm(r_perp)
+                if np.linalg.norm(ball.vel) > 0:
+                    cos = - np.dot(r_perp, ball.vel / np.linalg.norm(ball.vel))
+                    if cos != 0:
+                        p = ball.pos - (ball.radius - dist) / cos * ball.vel / np.linalg.norm(ball.vel)\
+                            - ball.radius * r_perp
+                    else:
+                        p = ball.pos - ball.radius * r_perp
+                else:
+                    p = ball.pos - dist * r_perp
+                n = r_perp
             else:
                 dist = min(np.linalg.norm(r_1), np.linalg.norm(r_2))
                 if dist == np.linalg.norm(r_1):
                     p = self.vertices[i]
-                    n = self.normal[i]
                 else:
                     p = self.vertices[i-1]
-                    n = self.normal[i]
+                n = (ball.pos - p) / np.linalg.norm(ball.pos - p)
             if dist < distance:
                 point = p
                 distance = dist
                 normal = n
         if distance > ball.radius:
-            return
-        collision_axis = ball.pos - point
-        ball.update(*update_args)
-        ball.flip_vel(collision_axis)
-        return True
+            return [False, False]
+        ball.pos = point + normal * 1.01 * ball.radius
+        ball.flip_vel(normal)
+        return [True, point]
 
 
 class MagneticField():
