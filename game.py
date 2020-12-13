@@ -3,6 +3,7 @@ import objects
 import data
 import numpy as np
 from main import WINDOW_SIZE, WINDOW_WIDTH, WINDOW_HEIGHT,  BG_COLOR
+import matplotlib.pyplot as plt
 
 
 class Game:
@@ -125,7 +126,7 @@ class Game:
 
         collided = False
         for obstacle in self.obstacles:
-            if obstacle.collide(self.ball, [self.B.value, self.friction, -dt]):
+            if obstacle.collide(self.ball)[0]:
                 collided = True
 
         if collided:
@@ -137,6 +138,27 @@ class Game:
             self.ball.vel = np.zeros(2, dtype=float)
             self.win = True
             data.write_score(self.level, self.score)
+
+
+def win_screen(score):
+    # зарозовим экран
+    fg = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
+    fg.fill((224, 99, 201, 128))
+
+    # выведем информацию
+    text = ["YOU WIN",  "Score: " + str(score)]
+    font = pygame.font.Font(None, 100)
+    text_coord = 50
+    for line in text:
+        string_rendered = font.render(line, 1, pygame.Color('#fff500'))
+        line_rect = string_rendered.get_rect()
+        text_coord += 10
+        line_rect.top = text_coord
+        line_rect.x = (WINDOW_SIZE[0] - string_rendered.get_width()) // 2
+        text_coord += line_rect.height
+        fg.blit(string_rendered, line_rect)
+
+    return fg
 
 
 class Constructor:
@@ -232,22 +254,166 @@ class Constructor:
                                                text_w + 20, text_h + 20), 1)
 
 
-def win_screen(score):
-    # зарозовим экран
-    fg = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
-    fg.fill((224, 99, 201, 128))
+class ChaosStudy:
+    def __init__(self, level):
+        self.field = pygame.Surface(WINDOW_SIZE)
+        pygame.draw.rect(self.field, pygame.Color("white"), ((0, 0), WINDOW_SIZE))
 
-    # выведем информацию
-    text = ["YOU WIN",  "Score: " + str(score)]
-    font = pygame.font.Font(None, 100)
-    text_coord = 50
-    for line in text:
-        string_rendered = font.render(line, 1, pygame.Color('#fff500'))
-        line_rect = string_rendered.get_rect()
-        text_coord += 10
-        line_rect.top = text_coord
-        line_rect.x = (WINDOW_SIZE[0] - string_rendered.get_width()) // 2
-        text_coord += line_rect.height
-        fg.blit(string_rendered, line_rect)
+        self.stop = False
 
-    return fg
+        self.all_sprites = pygame.sprite.Group()
+
+        self.ball_number = 15  # number of balls being simulated is
+
+        self.balls = []
+        self.cue = None
+        self.obstacles = None
+        self.B = objects.MagneticField(0.05)
+        self.friction = 0.0
+
+        self.map_data = data.read_map(level)
+        self.make_map()
+
+        self.d_angle = np.pi / 200
+        self.d_coord = 2
+
+        self.plot_on = False
+        self.length = []
+        self.angles = []
+        for i in range(self.ball_number):
+            self.length.append([])
+            self.angles.append([])
+
+    def make_map(self):
+        # edges of the field
+        self.obstacles = [objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[2])]
+        # obstacles on the field
+        for i, obstacle in enumerate(self.map_data[3]):
+            self.obstacles.append(objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[3][i],
+                                                   fill_color=pygame.Color("white")))
+
+        self.draw_on_field()
+
+    def draw_on_field(self):
+        self.field.fill(BG_COLOR)
+        for i in range(len(self.obstacles)):
+            self.field.blit(self.obstacles[i].image, (0, 0))
+        self.field.blit(self.B.image, self.B.rect)
+        for ball in self.balls:
+            self.field.blit(ball.image,
+                            (ball.pos[0] - ball.radius,
+                             ball.pos[1] - ball.radius))
+        if len(self.balls) >= 1 and self.balls[0].vel_value() == 0:
+            self.field.blit(self.cue.image, self.cue.rect)
+
+    def update(self, events, dt):
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                btn = event.button
+                if len(self.balls) == 0:
+                    if btn == 1:
+                        self.make_balls(event)
+                        self.cue = objects.Cue(self.all_sprites, self.balls[0].pos, max_vel=15)
+                    if self.B.rect.collidepoint(event.pos):
+                        if btn == 4:  # mousewheel up
+                            self.B.change_value(1)
+                        if btn == 5:  # mousewheel down
+                            self.B.change_value(-1)
+                elif self.balls[0].vel_value() == 0:
+                    if btn == 1:  # rightclick
+                        self.set_vel(self.cue.get_vel())
+                    if self.B.rect.collidepoint(event.pos):
+                        if btn == 4:  # mousewheel up
+                            self.B.change_value(1)
+                        if btn == 5:  # mousewheel down
+                            self.B.change_value(-1)
+                    else:
+                        if self.balls[0].vel_value() == 0:
+                            if btn == 4:  # mousewheel up
+                                self.cue.change_value(5)
+                            if btn == 5:  # mousewheel down
+                                self.cue.change_value(-5)
+            elif event.type == pygame.KEYDOWN:
+                if self.balls[0].vel_value() == 0 and event.key == pygame.K_LEFT:
+                    self.balls = []
+                    self.cue = None
+                elif event.key == pygame.K_SPACE:
+                    if self.stop:
+                        self.plot_on = False
+                    self.stop = not self.stop
+
+        if self.cue is not None:
+            self.cue.update(pygame.mouse.get_pos())
+            self.cue.pos = self.balls[0].pos
+
+        # cycles that check for collisions and put points on Poincare section
+        if not self.stop:
+            for i, ball in enumerate(self.balls):
+                if np.linalg.norm(ball.vel) > 0:
+                    for obstacle in self.obstacles:
+                        data = obstacle.collide(ball)
+                        if obstacle == self.obstacles[0] and data[0]:
+                            # put a point on the section
+                            length = self.boundary_coords(data[1], data[2])
+                            angle = np.dot(ball.vel/np.linalg.norm(ball.vel), obstacle.tangent[data[2]])
+                            self.length[i].append(length)
+                            self.angles[i].append(angle)
+
+            for ball in self.balls:
+                ball.update(self.B.value, self.friction, dt)
+        elif not self.plot_on:
+            self.draw_section()
+
+    def make_balls(self, event):
+        ball_coords = [np.array(event.pos)]
+        self.balls.append(objects.Ball(self.all_sprites, 10, ball_coords[0]))
+        for i in range(self.ball_number * 10):
+            if len(self.balls) < self.ball_number:
+                color = pygame.Color(np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255))
+                coords = ball_coords[0] + self.d_coord * (np.random.rand(2) - 0.5 * np.ones(2))
+                new_ball = objects.Ball(self.all_sprites, 10, coords, color=color)
+                collide = False
+                for obstacle in self.obstacles:
+                    if obstacle.collide(new_ball)[0]:
+                        collide = True
+                        break
+                if not collide:
+                    self.balls.append(new_ball)
+            else:
+                break
+
+    def set_vel(self, vel):
+        vel = np.array(vel)
+        for ball in self.balls:
+            if ball == self.balls[0]:
+                ball.vel = vel
+            else:
+                angle = self.d_angle * (np.random.rand() - 0.5)
+                new_vel = np.dot(np.array([[np.cos(angle), np.sin(angle)], [-np.sin(angle), np.cos(angle)]]), vel)
+                ball.vel = new_vel
+
+    def boundary_coords(self, point, vertex_num):
+        if vertex_num == 0:
+            vertex_num = len(self.obstacles[0].vertices - 1)
+        coord = 0
+        for i in range(vertex_num-1):
+            coord += np.linalg.norm(self.obstacles[0].vertices[i+1] - self.obstacles[0].vertices[i])
+        coord += np.linalg.norm(point - self.obstacles[0].vertices[vertex_num-1])
+        return coord
+
+    def draw_section(self):
+        self.plot_on = True
+        plot = plt.figure()
+        section = plot.add_subplot(111)
+        section.set_ylim(-1.05, 1.05)
+        section.set_xlim(0, self.boundary_coords(self.obstacles[0].vertices[0], len(self.obstacles[0].vertices)))
+        section.set_xlabel("$\\xi $")
+        section.set_ylabel("$\\cos \\varphi$")
+        for i, vertex in enumerate(self.obstacles[0].vertices):
+            length = self.boundary_coords(vertex, i) * np.ones(2)
+            angle = np.array([-1.05, 1.05])
+            section.plot(length, angle, color="blue")
+        for i, ball in enumerate(self.balls):
+            color = (ball.color[0]/255, ball.color[1]/255, ball.color[2]/255)
+            section.scatter(self.length[i], self.angles[i], color=color, s=20)
+        plt.show()
