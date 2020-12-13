@@ -16,6 +16,7 @@ class Ball(pygame.sprite.Sprite):
         self.radius = radius
         self.vel = np.zeros(2, dtype=float)
         self.pos = np.array(pos, dtype=float)
+        self.color = color
 
         self.image = pygame.Surface((2 * radius, 2 * radius), pygame.SRCALPHA)
         pygame.draw.circle(self.image, color, (radius, radius), radius)
@@ -192,11 +193,12 @@ class Obstacle(pygame.sprite.Sprite):
                 point = p
                 distance = dist
                 normal = n
+                vertex_num = i
         if distance > ball.radius:
-            return [False, False]
+            return [False]
         ball.pos = point + normal * 1.01 * ball.radius
         ball.flip_vel(normal)
-        return [True, point]
+        return [True, point, vertex_num]
 
 
 class MagneticField():

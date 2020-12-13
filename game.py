@@ -3,6 +3,7 @@ import objects
 import data
 import numpy as np
 from main import WINDOW_SIZE, WINDOW_WIDTH, WINDOW_HEIGHT,  BG_COLOR
+import matplotlib.pyplot as plt
 
 
 class Game:
@@ -137,6 +138,27 @@ class Game:
             self.win = True
 
 
+def win_screen(score):
+    # зарозовим экран
+    fg = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
+    fg.fill((224, 99, 201, 128))
+
+    # выведем информацию
+    text = ["YOU WIN",  "Score: " + str(score)]
+    font = pygame.font.Font(None, 100)
+    text_coord = 50
+    for line in text:
+        string_rendered = font.render(line, 1, pygame.Color('#fff500'))
+        line_rect = string_rendered.get_rect()
+        text_coord += 10
+        line_rect.top = text_coord
+        line_rect.x = (WINDOW_SIZE[0] - string_rendered.get_width()) // 2
+        text_coord += line_rect.height
+        fg.blit(string_rendered, line_rect)
+
+    return fg
+
+
 class Constructor:
     """Implements interactive creating of levels."""
     def __init__(self, level):
@@ -239,7 +261,7 @@ class ChaosStudy:
 
         self.all_sprites = pygame.sprite.Group()
 
-        self.ball_number = 10  # number of balls being simulated is
+        self.ball_number = 15  # number of balls being simulated is
 
         self.balls = []
         self.cue = None
@@ -250,8 +272,15 @@ class ChaosStudy:
         self.map_data = data.read_map(level)
         self.make_map()
 
-        self.d_angle = np.pi / 100
-        self.d_coord = 5
+        self.d_angle = np.pi / 200
+        self.d_coord = 2
+
+        self.plot_on = False
+        self.length = []
+        self.angles = []
+        for i in range(self.ball_number):
+            self.length.append([])
+            self.angles.append([])
 
     def make_map(self):
         # edges of the field
@@ -267,14 +296,13 @@ class ChaosStudy:
         self.field.fill(BG_COLOR)
         for i in range(len(self.obstacles)):
             self.field.blit(self.obstacles[i].image, (0, 0))
-        if not self.stop:
-            self.field.blit(self.B.image, self.B.rect)
-            for ball in self.balls:
-                self.field.blit(ball.image,
-                                (ball.pos[0] - ball.radius,
-                                 ball.pos[1] - ball.radius))
-            if len(self.balls) >= 1 and self.balls[0].vel_value() == 0:
-                self.field.blit(self.cue.image, self.cue.rect)
+        self.field.blit(self.B.image, self.B.rect)
+        for ball in self.balls:
+            self.field.blit(ball.image,
+                            (ball.pos[0] - ball.radius,
+                             ball.pos[1] - ball.radius))
+        if len(self.balls) >= 1 and self.balls[0].vel_value() == 0:
+            self.field.blit(self.cue.image, self.cue.rect)
 
     def update(self, events, dt):
         for event in events:
@@ -282,7 +310,7 @@ class ChaosStudy:
                 btn = event.button
                 if len(self.balls) == 0:
                     if btn == 1:
-                        self.make_balls(event, dt)
+                        self.make_balls(event)
                         self.cue = objects.Cue(self.all_sprites, self.balls[0].pos, max_vel=15)
                     if self.B.rect.collidepoint(event.pos):
                         if btn == 4:  # mousewheel up
@@ -303,26 +331,38 @@ class ChaosStudy:
                                 self.cue.change_value(5)
                             if btn == 5:  # mousewheel down
                                 self.cue.change_value(-5)
-            elif event.type == pygame.KEYDOWN and self.balls[0].vel_value() == 0:
-                if event.key == pygame.K_LEFT:
+            elif event.type == pygame.KEYDOWN:
+                if self.balls[0].vel_value() == 0 and event.key == pygame.K_LEFT:
                     self.balls = []
                     self.cue = None
+                elif event.key == pygame.K_SPACE:
+                    if self.stop:
+                        self.plot_on = False
+                    self.stop = not self.stop
 
         if self.cue is not None:
             self.cue.update(pygame.mouse.get_pos())
             self.cue.pos = self.balls[0].pos
 
-        # cycles that check for collisions and put points on map
-        for ball in self.balls:
-            for obstacle in self.obstacles:
-                if obstacle.collide(ball)[0]:
-                    # put a point on the map
-                    pass
+        # cycles that check for collisions and put points on Poincare section
+        if not self.stop:
+            for i, ball in enumerate(self.balls):
+                if np.linalg.norm(ball.vel) > 0:
+                    for obstacle in self.obstacles:
+                        data = obstacle.collide(ball)
+                        if obstacle == self.obstacles[0] and data[0]:
+                            # put a point on the section
+                            length = self.boundary_coords(data[1], data[2])
+                            angle = np.dot(ball.vel/np.linalg.norm(ball.vel), obstacle.tangent[data[2]])
+                            self.length[i].append(length)
+                            self.angles[i].append(angle)
 
-        for ball in self.balls:
-            ball.update(self.B.value, self.friction, dt)
+            for ball in self.balls:
+                ball.update(self.B.value, self.friction, dt)
+        elif not self.plot_on:
+            self.draw_section()
 
-    def make_balls(self, event, dt):
+    def make_balls(self, event):
         ball_coords = [np.array(event.pos)]
         self.balls.append(objects.Ball(self.all_sprites, 10, ball_coords[0]))
         for i in range(self.ball_number * 10):
@@ -350,26 +390,28 @@ class ChaosStudy:
                 new_vel = np.dot(np.array([[np.cos(angle), np.sin(angle)], [-np.sin(angle), np.cos(angle)]]), vel)
                 ball.vel = new_vel
 
-    def boundary_coords(self, point):
-        pass
+    def boundary_coords(self, point, vertex_num):
+        if vertex_num == 0:
+            vertex_num = len(self.obstacles[0].vertices - 1)
+        coord = 0
+        for i in range(vertex_num-1):
+            coord += np.linalg.norm(self.obstacles[0].vertices[i+1] - self.obstacles[0].vertices[i])
+        coord += np.linalg.norm(point - self.obstacles[0].vertices[vertex_num-1])
+        return coord
 
-
-def win_screen(score):
-    # зарозовим экран
-    fg = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
-    fg.fill((224, 99, 201, 128))
-
-    # выведем информацию
-    text = ["YOU WIN",  "Score: " + str(score)]
-    font = pygame.font.Font(None, 100)
-    text_coord = 50
-    for line in text:
-        string_rendered = font.render(line, 1, pygame.Color('#fff500'))
-        line_rect = string_rendered.get_rect()
-        text_coord += 10
-        line_rect.top = text_coord
-        line_rect.x = (WINDOW_SIZE[0] - string_rendered.get_width()) // 2
-        text_coord += line_rect.height
-        fg.blit(string_rendered, line_rect)
-
-    return fg
+    def draw_section(self):
+        self.plot_on = True
+        plot = plt.figure()
+        section = plot.add_subplot(111)
+        section.set_ylim(-1.05, 1.05)
+        section.set_xlim(0, self.boundary_coords(self.obstacles[0].vertices[0], len(self.obstacles[0].vertices)))
+        section.set_xlabel("$\\xi $")
+        section.set_ylabel("$\\cos \\varphi$")
+        for i, vertex in enumerate(self.obstacles[0].vertices):
+            length = self.boundary_coords(vertex, i) * np.ones(2)
+            angle = np.array([-1.05, 1.05])
+            section.plot(length, angle, color="blue")
+        for i, ball in enumerate(self.balls):
+            color = (ball.color[0]/255, ball.color[1]/255, ball.color[2]/255)
+            section.scatter(self.length[i], self.angles[i], color=color, s=20)
+        plt.show()
