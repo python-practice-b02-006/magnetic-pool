@@ -97,15 +97,15 @@ class Cue(pygame.sprite.Sprite):
 
     def update(self, mouse_pos):
         mouse_vector = np.array(mouse_pos) - self.pos
-        self.direction = mouse_vector / (mouse_vector ** 2).sum() ** 0.5
+        if (mouse_vector ** 2).sum() != 0:
+            self.direction = mouse_vector / (mouse_vector ** 2).sum() ** 0.5
 
-        angle = np.arctan2(*self.direction[::-1])
+            angle = np.arctan2(*self.direction[::-1])
 
-        self.image, self.rect = rotate(self.filled_arrow(),
-                                       np.degrees(angle),
-                                       self.pos,
-                                       pygame.Vector2(self.original_image.get_rect().width / 2, 0))
-
+            self.image, self.rect = rotate(self.filled_arrow(),
+                                           np.degrees(angle),
+                                           self.pos,
+                                           pygame.Vector2(self.original_image.get_rect().width / 2, 0))
 
 class Pocket(pygame.sprite.Sprite):
     """Put ball here to win
