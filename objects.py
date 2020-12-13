@@ -97,7 +97,8 @@ class Cue(pygame.sprite.Sprite):
 
     def update(self, mouse_pos):
         mouse_vector = np.array(mouse_pos) - self.pos
-        self.direction = mouse_vector / (mouse_vector ** 2).sum() ** 0.5
+        if (mouse_vector ** 2).sum() ** 0.5 > 0:
+            self.direction = mouse_vector / (mouse_vector ** 2).sum() ** 0.5
 
         angle = np.arctan2(*self.direction[::-1])
 

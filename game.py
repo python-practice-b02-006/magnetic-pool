@@ -232,6 +232,106 @@ class Constructor:
 
 class ChaosStudy:
     def __init__(self, level):
+        self.field = pygame.Surface(WINDOW_SIZE)
+        pygame.draw.rect(self.field, pygame.Color("white"), ((0, 0), WINDOW_SIZE))
+
+        self.stop = False
+
+        self.all_sprites = pygame.sprite.Group()
+
+        self.ball_number = 1  # number of balls being simulated
+
+        self.balls = []
+        self.cue = None
+        self.obstacles = None
+        self.B = objects.MagneticField(0.05)
+        self.friction = 0.0
+
+        self.map_data = data.read_map(level)
+        self.make_map()
+
+        self.d_angle = np.pi / 100
+        self.d_coord = 0.1
+
+    def make_map(self):
+        # edges of the field
+        self.obstacles = [objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[2])]
+        # obstacles on the field
+        for i, obstacle in enumerate(self.map_data[3]):
+            self.obstacles.append(objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[3][i],
+                                                   fill_color=pygame.Color("white")))
+
+        self.draw_on_field()
+
+    def draw_on_field(self):
+        self.field.fill(BG_COLOR)
+        for i in range(len(self.obstacles)):
+            self.field.blit(self.obstacles[i].image, (0, 0))
+        if not self.stop:
+            self.field.blit(self.B.image, self.B.rect)
+            for ball in self.balls:
+                self.field.blit(ball.image,
+                                (ball.pos[0] - ball.radius,
+                                 ball.pos[1] - ball.radius))
+            if len(self.balls) >= 1 and self.balls[0].vel_value() == 0:
+                self.field.blit(self.cue.image, self.cue.rect)
+
+    def update(self, events, dt):
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                btn = event.button
+                if len(self.balls) == 0:
+                    if btn == 1:
+                        self.make_balls(event)
+                        self.cue = objects.Cue(self.all_sprites, self.balls[0].pos, max_vel=15)
+                    if self.B.rect.collidepoint(event.pos):
+                        if btn == 4:  # mousewheel up
+                            self.B.change_value(1)
+                        if btn == 5:  # mousewheel down
+                            self.B.change_value(-1)
+                elif self.balls[0].vel_value() == 0:
+                    if btn == 1:  # rightclick
+                        self.set_vel(self.cue.get_vel())
+                    if self.B.rect.collidepoint(event.pos):
+                        if btn == 4:  # mousewheel up
+                            self.B.change_value(1)
+                        if btn == 5:  # mousewheel down
+                            self.B.change_value(-1)
+                    else:
+                        if self.balls[0].vel_value() == 0:
+                            if btn == 4:  # mousewheel up
+                                self.cue.change_value(5)
+                            if btn == 5:  # mousewheel down
+                                self.cue.change_value(-5)
+            elif event.type == pygame.KEYDOWN and self.balls[0].vel_value() == 0:
+                if event.key == pygame.K_LEFT:
+                    self.balls = []
+                    self.cue = None
+
+        if self.cue is not None:
+            self.cue.update(pygame.mouse.get_pos())
+            self.cue.pos = self.balls[0].pos
+
+        # cycles that check for collisions and put points on map
+        for ball in self.balls:
+            for obstacle in self.obstacles:
+                if obstacle.collide(ball, [self.B.value, self.friction, -dt]):
+                    # put a point on the map
+                    pass
+
+        for ball in self.balls:
+            ball.update(self.B.value, self.friction, dt)
+
+    def make_balls(self, event):
+        ball_coords = [event.pos]
+        self.balls = [objects.Ball(self.all_sprites, 10, coords) for coords in ball_coords]
+
+    def set_vel(self, vel):
+        ball_vels = [vel]
+        for i, ball in enumerate(self.balls):
+            ball.vel = ball_vels[i]
+
+    def boundary_coords(self, point):
         pass
 
 

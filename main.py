@@ -98,6 +98,10 @@ class Manager:
             self.constructor.draw()
             screen.blit(self.constructor.field, (0, 0))
 
+        if self.chaos_on:
+            self.chaos_study.draw_on_field()
+            screen.blit(self.chaos_study.field, (0, 0))
+
         self.manager.draw_ui(screen)
         for manager in self.lb_managers:
             manager.draw_ui(screen)
@@ -139,6 +143,8 @@ class Manager:
                 self.game.update(events, DT)
             else:
                 self.win_game()
+        if self.chaos_on:
+            self.chaos_study.update(events, DT)
         if self.construction:
             if not self.constructor.stage == 3:
                 self.constructor.update(events)
