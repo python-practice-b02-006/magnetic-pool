@@ -61,6 +61,8 @@ def save_map(field, level):
     text_rect = text.get_rect()
     text_rect.centerx = field_w // 2
     text_rect.top = field_h + 3
+    if text_rect.bottom > 155:
+        text_rect.bottom = 155 - 3
     new_field.blit(text, text_rect)
 
     pygame.image.save_extended(new_field, os.path.join(os.path.dirname(__file__),
@@ -129,7 +131,7 @@ def get_levels_scores():
 
 def write_score(level, score):
     data = get_levels_scores()
-    if data[level] < score:
+    if data.get(level, 0) < score:
         data[level] = score
         with open(os.path.join("levels", "high_scores.txt"), "w", encoding="utf8") as f:
             f.write("\n".join([f"{k} {v}" for k, v in data.items()]))
