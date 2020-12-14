@@ -124,6 +124,7 @@ class Game:
         self.cue.update(pygame.mouse.get_pos())
         self.cue.pos = self.ball.pos
 
+        self.ball.update(self.B.value, self.friction, dt)
         collided = False
         for obstacle in self.obstacles:
             if obstacle.collide(self.ball)[0]:
@@ -131,8 +132,6 @@ class Game:
 
         if collided:
             self.reduce_score(1)
-
-        self.ball.update(self.B.value, self.friction, dt)
 
         if self.pocket.check_win(self.ball.pos):
             self.ball.vel = np.zeros(2, dtype=float)
@@ -346,8 +345,11 @@ class ChaosStudy:
             self.cue.update(pygame.mouse.get_pos())
             self.cue.pos = self.balls[0].pos
 
-        # cycles that check for collisions and put points on Poincare section
         if not self.stop:
+            for ball in self.balls:
+                if np.linalg.norm(ball.vel) > 0:
+                    ball.update(self.B.value, self.friction, dt)
+            # cycles that check for collisions and put points on Poincare section
             for i, ball in enumerate(self.balls):
                 if np.linalg.norm(ball.vel) > 0:
                     for obstacle in self.obstacles:
@@ -358,9 +360,6 @@ class ChaosStudy:
                             angle = np.dot(ball.vel/np.linalg.norm(ball.vel), obstacle.tangent[data[2]])
                             self.length[i].append(length)
                             self.angles[i].append(angle)
-
-            for ball in self.balls:
-                ball.update(self.B.value, self.friction, dt)
         elif not self.plot_on:
             self.draw_section()
 
@@ -409,6 +408,7 @@ class ChaosStudy:
         section.set_xlim(0, self.boundary_coords(self.obstacles[0].vertices[0], len(self.obstacles[0].vertices)))
         section.set_xlabel("$\\xi $")
         section.set_ylabel("$\\cos \\varphi$")
+        section.set_title("Poincare section")
         for i, vertex in enumerate(self.obstacles[0].vertices):
             length = self.boundary_coords(vertex, i) * np.ones(2)
             angle = np.array([-1.05, 1.05])

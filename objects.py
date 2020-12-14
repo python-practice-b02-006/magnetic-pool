@@ -16,6 +16,8 @@ class Ball(pygame.sprite.Sprite):
         self.radius = radius
         self.vel = np.zeros(2, dtype=float)
         self.pos = np.array(pos, dtype=float)
+        self.prev_vel = np.zeros(2, dtype=float)
+        self.prev_pos = np.zeros(2, dtype=float)
         self.color = color
 
         self.image = pygame.Surface((2 * radius, 2 * radius), pygame.SRCALPHA)
@@ -28,23 +30,15 @@ class Ball(pygame.sprite.Sprite):
 
     def update(self, b, friction, dt):
         b = np.array([0, 0, b])
-        self.pos += self.vel * dt
+        self.prev_pos = self.pos
+        self.pos = self.pos + self.vel * dt
         vel_abs = np.linalg.norm(self.vel)
-        self.vel += np.resize(np.cross(self.vel, b), 2) * dt
+        self.prev_vel = self.vel
+        self.vel = self.vel + np.resize(np.cross(self.vel, b), 2) * dt
         if np.linalg.norm(self.vel) != 0:
             self.vel = self.vel / np.linalg.norm(self.vel) * vel_abs
             self.vel -= friction * self.vel / np.linalg.norm(self.vel) * dt
         self.rect = self.image.get_rect(center=self.pos.astype(int))
-
-    def flip_vel(self, axis, coef_perp=1, coef_par=1):
-        """
-        Changes the velocity of the ball as if it collided inelastically with a wall with normal vector "axis".
-        """
-        axis = np.array(axis)
-        axis = axis / np.linalg.norm(axis)
-        vel_perp = self.vel.dot(axis) * axis
-        vel_par = self.vel - vel_perp
-        self.vel = -vel_perp * coef_perp + vel_par * coef_par
 
 
 class Cue(pygame.sprite.Sprite):
@@ -168,37 +162,81 @@ class Obstacle(pygame.sprite.Sprite):
         for i in range(len(self.vertices)):
             r_1 = self.vertices[i] - ball.pos
             r_2 = self.vertices[i-1] - ball.pos
-            if np.dot(r_1, self.tangent[i])*np.dot(r_2, self.tangent[i]) < 0:
+            if np.dot(r_1, self.tangent[i])*np.dot(r_2, self.tangent[i]) < 0:  # if the ball is going to hit an edge
                 dist = abs(np.dot(r_1, self.normal[i]))
-                r_perp = - np.dot(self.normal[i], r_1) * self.normal[i]
-                r_perp = r_perp / np.linalg.norm(r_perp)
-                if np.linalg.norm(ball.vel) > 0:
-                    cos = - np.dot(r_perp, ball.vel / np.linalg.norm(ball.vel))
-                    if cos != 0:
-                        p = ball.pos - (ball.radius - dist) / cos * ball.vel / np.linalg.norm(ball.vel)\
-                            - ball.radius * r_perp
+                if dist < distance and dist < ball.radius:
+                    # calculate the normal with correct direction
+                    r_perp = - np.dot(self.normal[i], r_1) * self.normal[i]
+                    r_perp = r_perp / np.linalg.norm(r_perp)
+                    if np.linalg.norm(ball.vel) > 0:
+                        p, v = self.calc_new_state(ball, r_perp, dist)
                     else:
-                        p = ball.pos - ball.radius * r_perp
-                else:
-                    p = ball.pos - dist * r_perp
-                n = r_perp
-            else:
+                        p = ball.pos - dist * r_perp
+                        v = np.zeros(2)
+                    n = r_perp
+                    point = p
+                    velocity = v
+                    distance = dist
+                    normal = n
+                    vertex_num = i
+            else:  # if the ball is going to hit a vertex
                 dist = min(np.linalg.norm(r_1), np.linalg.norm(r_2))
-                if dist == np.linalg.norm(r_1):
-                    p = self.vertices[i]
-                else:
-                    p = self.vertices[i-1]
-                n = (ball.pos - p) / np.linalg.norm(ball.pos - p)
-            if dist < distance:
-                point = p
-                distance = dist
-                normal = n
-                vertex_num = i
+                if dist < distance and dist < ball.radius:
+                    distance = dist
+                    if dist == np.linalg.norm(r_1):
+                        p = self.vertices[i]
+                    else:
+                        p = self.vertices[i-1]
+                    n = (ball.pos - p) / np.linalg.norm(ball.pos - p)
+                    v = self.flip_vel(n, ball.vel)
+                    point = p
+                    velocity = v
+                    normal = n
+                    vertex_num = i
         if distance > ball.radius:
             return [False]
-        ball.pos = point + normal * 1.01 * ball.radius
-        ball.flip_vel(normal)
+        ball.pos = point + normal * ball.radius
+        ball.vel = velocity
         return [True, point, vertex_num]
+
+    def flip_vel(self, axis, vel, coef_perp=1, coef_par=1):
+        """
+        Changes the velocity of the ball as if it collided inelastically with a wall with normal vector "axis".
+        """
+        axis = np.array(axis)
+        axis = axis / np.linalg.norm(axis)
+        vel_perp = vel.dot(axis) * axis
+        vel_par = vel - vel_perp
+        vel = -vel_perp * coef_perp + vel_par * coef_par
+        return vel
+
+    def calc_new_state(self, ball, r_perp, dist):
+        """Calculates the point where the ball hit the obstacle."""
+        gamma = np.arccos(np.dot(r_perp, ball.vel / np.linalg.norm(ball.vel))) - np.pi/2
+        d_pos = ball.pos - ball.prev_pos
+        cos_beta = np.dot(ball.vel / np.linalg.norm(ball.vel), d_pos / np.linalg.norm(d_pos))
+        if cos_beta > 1:
+            cos_beta = 1
+        elif cos_beta < -1:
+            cos_beta = -1
+        vec = ball.vel / np.linalg.norm(ball.vel)
+        if abs(cos_beta) != 1:  # If magnetic field is on
+            radius = np.linalg.norm(d_pos)/(2*(1-cos_beta**2)**0.5)  # Radius of the trajectory (which is a circle)
+
+            if abs(np.cos(gamma) - (ball.radius - dist)/radius) <= 1:
+                alpha = (np.arccos(np.cos(gamma) - (ball.radius - dist)/radius) - gamma) / 2
+                rot = np.array([[np.cos(alpha), -np.sin(alpha)], [np.sin(alpha), np.cos(alpha)]])
+                vec = np.dot(rot, vec)
+                p = ball.pos - vec * 2 * radius * np.sin(alpha) - ball.radius * r_perp
+                v = np.linalg.norm(ball.vel) * np.dot(rot, vec)
+                v = self.flip_vel(r_perp, v)
+            else:
+                p = np.zeros(2)
+                v = np.zeros(2)
+        else:
+            p = ball.pos - vec * (ball.radius - dist) / np.sin(gamma) - r_perp * ball.radius
+            v = self.flip_vel(r_perp, ball.vel)
+        return p, v
 
 
 class MagneticField():

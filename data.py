@@ -50,7 +50,6 @@ def save_map(field, level):
         field = pygame.transform.smoothscale(field,
                                              (field_rect / coefficients[1]).astype(int))
 
-    print(level, get_levels_scores())
     score = get_levels_scores().get(level, 0)
 
     font = pygame.font.Font(None, 20)

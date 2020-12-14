@@ -11,10 +11,10 @@
             "shadow_width": "0"
         }
     },
-    "level_1": {
+    "level_3": {
         "images": {
             "normal_image": {
-                "path": "images\\levels\\level_1.png"
+                "path": "images\\levels\\level_3.png"
             }
         }
     }

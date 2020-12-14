@@ -201,6 +201,7 @@ class Manager:
         """Actions after construction of a level was started."""
         self.new_level_button.visible = 0
         self.select_level_button.visible = 1
+        self.chaos_button.visible = 0
         for level_button in self.level_buttons:
             level_button.visible = 0
         self.construction = True
