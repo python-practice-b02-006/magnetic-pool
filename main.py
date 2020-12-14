@@ -208,6 +208,8 @@ class Manager:
 
     def win_game(self):
         """Actions after game was won."""
+        self.make_level_pictures()
+        self.level_buttons = self.make_level_buttons()
         self.main_menu_button.rect = self.mmb_rect[1]
         self.main_menu_button.rebuild()
         self.select_level_button.rect = self.slb_rect[1]
