@@ -66,7 +66,7 @@ def save_map(field, level):
     new_field.blit(text, text_rect)
 
     pygame.image.save_extended(new_field, os.path.join(os.path.dirname(__file__),
-                                                   'images/levels', "level_" + str(level) + ".png"))
+                                                       'images/levels', "level_" + str(level) + ".png"))
 
 
 def save_level_data(constructor):
@@ -124,10 +124,12 @@ def number_of_levels():
     """
     return len(os.listdir(path=os.path.join(os.path.dirname(__file__), 'levels'))) - 1
 
+
 def get_levels_scores():
     with open(os.path.join("levels", "high_scores.txt"), "r",  encoding="utf8") as f:
         data = {int(x): int(y) for line in f.readlines() for x, y in [tuple(line.split())]}
     return data
+
 
 def write_score(level, score):
     data = get_levels_scores()

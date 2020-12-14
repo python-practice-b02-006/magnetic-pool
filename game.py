@@ -7,21 +7,33 @@ import matplotlib.pyplot as plt
 
 
 class Game:
+    """Manages the game.
+
+    Attributes:
+        field: surface to which every game object is blitted.
+        all_sprites: group that contains all game objects.
+        level: level number.
+
+        ball: object that represents a ball which player tries to put in the pocket.
+        cue: object that represents cue using which player can hit a ball.
+        pocket: object that represents a place where the player is supposed to put the ball.
+        obstacles: array, containing objects that represent edges of the table and obstacles on the table.
+        B: object that represents magnetic field arrow. Magnetic field is perpendicular to the table.
+
+        friction: friction coefficient between the ball and the table.
+
+        win: variable that shows if the game was won.
+        score: player's score.
+        first_hit: variable that shows if it's the first time player has hit the ball.
+
+        map_data: contains data about the level.
+    """
     def __init__(self, level):
-        """Creates a game:
-        1) Reads data about this level from file. Creates a map of the level and puts it on the surface
-        self.field.
-        2) Creates a ball at the starting position, creates a target, puts them on self.field.
-
-        :param level: number of level.
-        """
-
         self.field = pygame.Surface(WINDOW_SIZE)
         pygame.draw.rect(self.field, pygame.Color("white"), ((0, 0), WINDOW_SIZE))
 
         self.all_sprites = pygame.sprite.Group()
 
-        self.win = False
         self.level = level
 
         self.ball = None
@@ -31,6 +43,7 @@ class Game:
         self.B = objects.MagneticField(0.05)
         self.friction = 0.01
 
+        self.win = False
         self.score = 10
         self.first_hit = True
 
@@ -38,6 +51,10 @@ class Game:
         self.make_map(level)
 
     def make_map(self, level):
+        """
+        Creates all game objects. Then calls draw_on_field method to blit them to field. After that calls save_map
+        function to save the map.
+        """
         self.ball = objects.Ball(self.all_sprites, 10, self.map_data[0])
         self.cue = objects.Cue(self.all_sprites, self.ball.pos, max_vel=15)
         self.pocket = objects.Pocket(self.all_sprites, 10, self.map_data[1])
@@ -52,6 +69,7 @@ class Game:
         data.save_map(self.field.subsurface(self.obstacles[0].polygon_rect), level)
 
     def draw_on_field(self):
+        """Blits game objects to field."""
         self.field.fill(BG_COLOR)
         for i in range(len(self.obstacles)):
             self.field.blit(self.obstacles[i].image, (0, 0))
@@ -72,6 +90,7 @@ class Game:
             self.field.blit(win_screen(self.score), (0, 0))
 
     def display_score(self):
+        """Displays score."""
         font = pygame.font.Font(None, 30)
         text = font.render(f"SCORE: {self.score}", 1, pygame.Color('black'))
         text_x = 20
@@ -79,10 +98,10 @@ class Game:
         text_w = text.get_width()
         text_h = text.get_height()
         self.field.blit(text, (text_x, text_y))
-        pygame.draw.rect(self.field, pygame.Color("#13a708"), (text_x - 10, text_y - 10,
-                                               text_w + 20, text_h + 20), 1)
+        pygame.draw.rect(self.field, pygame.Color("#13a708"), (text_x - 10, text_y - 10, text_w + 20, text_h + 20), 1)
 
     def reduce_score(self, value):
+        """Reduces score."""
         self.score -= value
         if self.score < 0:
             self.score = 0
@@ -94,7 +113,7 @@ class Game:
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 btn = event.button
-                if btn == 3: # leftclick
+                if btn == 3:  # leftclick
                     self.B.zero_value()
                 if self.ball.vel_value() == 0:
                     if btn == 1:  # rightclick
@@ -140,11 +159,12 @@ class Game:
 
 
 def win_screen(score):
-    # зарозовим экран
+    """Creates a surface which is blitted after the game was won."""
+    # make the screen pink
     fg = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
     fg.fill((224, 99, 201, 128))
 
-    # выведем информацию
+    # display information
     text = ["YOU WIN",  "Score: " + str(score)]
     font = pygame.font.Font(None, 100)
     text_coord = 50
@@ -161,12 +181,39 @@ def win_screen(score):
 
 
 class Constructor:
-    """Implements interactive creating of levels."""
+    """Implements interactive creating of levels.
+
+    Attributes:
+        all_sprites: group that contains all game objects.
+
+        field: surface to which every game object is blitted.
+
+        pocket: object that represents a place where the player is supposed to put the ball.
+        ball: object that represents a ball which player tries to put in the pocket.
+        obstacles: array, containing objects that represent edges of the table and obstacles on the table.
+
+        stages: dictionary that contains names of the stages.
+        stage: constructing a level consists of four stages:
+            0) Drawing obstacles. First obstacle is edge of the table. Other obstacles are optional. Player picks points
+            by right clicking on the screen. To finish drawing an obstacle player needs to press "space".
+            1) Picking where the pocket is. To do it player is supposed to right click on the screen.
+            2) Picking where the ball is. To do it player is supposed to right click on the screen.
+            3) Saving the level. If player reached the stage, he can now go to menu where levels are selected and he'll
+            see his level.
+            Player can switch between stages using left and right arrow buttons.
+
+        obstacle_number: number of obstacle that is being drawn.
+        line_pos: coordinates of two lines that connect mouse to first and last vertex of the obstacle that is being
+            drawn.
+
+        level: level number.
+    """
     def __init__(self, level):
         self.all_sprites = pygame.sprite.Group()
 
         self.field = pygame.Surface(WINDOW_SIZE)
         self.field.fill(BG_COLOR)
+
         self.pocket = None
         self.ball = None
         self.obstacles = []
@@ -178,6 +225,7 @@ class Constructor:
         self.level = level
 
     def update(self, events):
+        """Handles the events."""
         for event in events:
             if event.type == pygame.MOUSEMOTION:
                 if self.stage == 0:
@@ -228,6 +276,7 @@ class Constructor:
             data.make_level_button_theme(self.level)
 
     def draw(self):
+        """Draws everything that was created so far on the map."""
         self.field.fill(BG_COLOR)
         if len(self.obstacles) >= 0:
             for i in range(len(self.obstacles)):
@@ -242,6 +291,7 @@ class Constructor:
         self.display_stage()
 
     def display_stage(self):
+        """Displays the stage of construction."""
         font = pygame.font.Font(None, 30)
         text = font.render(f"Stage: {self.stages[self.stage]}", 1, pygame.Color('black'))
         text_x = 20
@@ -249,11 +299,46 @@ class Constructor:
         text_w = text.get_width()
         text_h = text.get_height()
         self.field.blit(text, (text_x, text_y))
-        pygame.draw.rect(self.field, (0, 255, 0), (text_x - 10, text_y - 10,
-                                               text_w + 20, text_h + 20), 1)
+        pygame.draw.rect(self.field, (0, 255, 0), (text_x - 10, text_y - 10, text_w + 20, text_h + 20), 1)
 
 
 class ChaosStudy:
+    """Implements studying chaos. To do that player should pick a place for a ball. When he does that multiple balls
+    will be created. Positions of the balls will be close to the position player has picked. Then player is supposed to
+    choose the velocity of the balls. Each ball will be given a velocity which has the same absolute value as the one
+    player has picked but is turned a little bit. Player can then look at the motion of the balls or he can draw a
+    Poincare section of the phase space of the system. At the first glance the phase space is four dimensional. However,
+    since in this mode balls travel without friction the absolute value of their velocities do not change. Therefore the
+    velocity can be described only by some angle.
+    We use the following coordinate system: on the x axis we plot the distance from the first vertex of the edge of the
+    table to the point where a ball collided with the edge of the table. The distance is measured along the perimeter of
+    the table. On the y axis we plot cosine of the angle between the velocity and the edge of the table.
+
+    Attributes:
+        field: surface to which every object is blitted.
+        stop: variable that shows if balls are moving.
+        all_sprites: group that contains all objects.
+
+        ball_number: number of balls being simulated
+        level: level number.
+
+        balls: array of objects that represent balls.
+        cue: object that represents cue using which player can hit a ball.
+        obstacles: array, containing objects that represent edges of the table and obstacles on the table.
+        B: object that represents magnetic field arrow. Magnetic field is perpendicular to the table.
+
+        friction: friction coefficient between the ball and the table.
+
+        map_data: contains data about the level.
+
+        d_angle: twice the maximum angle between the velocity player has chosen and a ball's velocity.
+        d_coord: twice the maximum difference of a coordinate between the position player has chosen and a ball's
+            position.
+
+        plot_on: variable that shows if Poincare section is on the screen.
+        length: array of distance coordinates in the border coordinate system.
+        angles: array of angle coordinates in the border coordinate system.
+    """
     def __init__(self, level):
         self.field = pygame.Surface(WINDOW_SIZE)
         pygame.draw.rect(self.field, pygame.Color("white"), ((0, 0), WINDOW_SIZE))
@@ -262,7 +347,7 @@ class ChaosStudy:
 
         self.all_sprites = pygame.sprite.Group()
 
-        self.ball_number = 15  # number of balls being simulated is
+        self.ball_number = 15
 
         self.balls = []
         self.cue = None
@@ -273,8 +358,8 @@ class ChaosStudy:
         self.map_data = data.read_map(level)
         self.make_map()
 
-        self.d_angle = np.pi / 200
-        self.d_coord = 2
+        self.d_angle = np.pi / 400
+        self.d_coord = 1
 
         self.plot_on = False
         self.length = []
@@ -284,6 +369,7 @@ class ChaosStudy:
             self.angles.append([])
 
     def make_map(self):
+        """Makes a map of the level."""
         # edges of the field
         self.obstacles = [objects.Obstacle(self.all_sprites, WINDOW_SIZE, self.map_data[2])]
         # obstacles on the field
@@ -294,6 +380,7 @@ class ChaosStudy:
         self.draw_on_field()
 
     def draw_on_field(self):
+        """Draws everything on the field."""
         self.field.fill(BG_COLOR)
         for i in range(len(self.obstacles)):
             self.field.blit(self.obstacles[i].image, (0, 0))
@@ -306,6 +393,7 @@ class ChaosStudy:
             self.field.blit(self.cue.image, self.cue.rect)
 
     def update(self, events, dt):
+        """Handles events and updates balls"""
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 btn = event.button
@@ -364,6 +452,7 @@ class ChaosStudy:
             self.draw_section()
 
     def make_balls(self, event):
+        """Creates balls."""
         ball_coords = [np.array(event.pos)]
         self.balls.append(objects.Ball(self.all_sprites, 10, ball_coords[0]))
         for i in range(self.ball_number * 10):
@@ -382,6 +471,7 @@ class ChaosStudy:
                 break
 
     def set_vel(self, vel):
+        """Gives balls velocity."""
         vel = np.array(vel)
         for ball in self.balls:
             if ball == self.balls[0]:
@@ -392,6 +482,7 @@ class ChaosStudy:
                 ball.vel = new_vel
 
     def boundary_coords(self, point, vertex_num):
+        """Calculates coordinates to plot on Poincare section."""
         if vertex_num == 0:
             vertex_num = len(self.obstacles[0].vertices - 1)
         coord = 0
@@ -401,6 +492,7 @@ class ChaosStudy:
         return coord
 
     def draw_section(self):
+        """Draws Poincare section."""
         self.plot_on = True
         plot = plt.figure()
         section = plot.add_subplot(111)

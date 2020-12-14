@@ -4,13 +4,19 @@ import os
 
 
 class Ball(pygame.sprite.Sprite):
-    """
-    Attributes:
-        pos numpy(int, int): center coordinates
-        color (pygame.Color)
-        vel numpy(float, float): x and y components of a velocity
-    """
+    """Represents a ball.
 
+    Attributes:
+        radius: radius of the ball.
+        vel numpy(float, float): x and y components of a velocity.
+        pos numpy(int, int): center coordinates.
+        prev_vel numpy(int, int): velocity at previous moment of time.
+        prev_pos numpy(int, int): center coordinates at previous moment of time.
+        color (pygame.Color) - color of the ball.
+
+        image: image of the ball.
+        rect: rectangle, that contains the ball.
+    """
     def __init__(self, group, radius, pos, color=pygame.Color("#f600ff")):
         super().__init__(group)
         self.radius = radius
@@ -29,6 +35,12 @@ class Ball(pygame.sprite.Sprite):
         return (self.vel ** 2).sum() ** 0.5
 
     def update(self, b, friction, dt):
+        """Updates ball's position and velocity. Saves current position and velocity.
+
+        :param b: magnetic field.
+        :param friction: friction coefficient with the table.
+        :param dt: time step.
+        """
         b = np.array([0, 0, b])
         self.prev_pos = self.pos
         self.pos = self.pos + self.vel * dt
@@ -119,18 +131,21 @@ class Pocket(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=pos)
 
     def check_win(self, ball_pos):
-       return ((ball_pos - self.pos) ** 2).sum() <= self.radius ** 2
+        return ((ball_pos - self.pos) ** 2).sum() <= self.radius ** 2
 
 
 class Obstacle(pygame.sprite.Sprite):
     """An object to stop ball. Draws a polygon on a
     transparent background with size of main window.
-    Than you blit it to main surface.
+    Then you blit it to main surface.
 
     Attributes:
-        window_size (int, int): current size of main window
-        border_color, fill_color (pygame.Color)
-        vertices (array of tuples (int, int)): vertices of a polygon
+        window_size (int, int): current size of main window.
+        border_color, fill_color (pygame.Color).
+        vertices (array of tuples (int, int)): vertices of a polygon.
+
+        tangent, normal: arrays containing tangent and normal unit vectors for each side of the polygon.
+        polygon_rect: rectangle, containing the polygon.
     """
     def __init__(self, group, window_size, vertices,
                  fill_color=pygame.Color("#0060ff"),
@@ -156,6 +171,13 @@ class Obstacle(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=(0, 0))
 
     def collide(self, ball):
+        """Calculates a collision between the ball and the obstacle.
+
+        :param ball: a ball, for which the collision is calculated.
+        :return: If the collision happened returns an array, which consists of True constant, point where the ball
+            collided the obstacle and number of a vertex which is one of the ends of the side of the obstacle with which
+            the ball collided. If the collision didn't happen returns an array which consists of False constant.
+        """
         distance = np.infty
         # point where the collision happens
         point = np.zeros(2, dtype=float)
@@ -200,9 +222,7 @@ class Obstacle(pygame.sprite.Sprite):
         return [True, point, vertex_num]
 
     def flip_vel(self, axis, vel, coef_perp=1, coef_par=1):
-        """
-        Changes the velocity of the ball as if it collided inelastically with a wall with normal vector "axis".
-        """
+        """Changes the velocity of the ball as if it collided inelastically with a wall with normal vector "axis". """
         axis = np.array(axis)
         axis = axis / np.linalg.norm(axis)
         vel_perp = vel.dot(axis) * axis
@@ -280,8 +300,8 @@ class MagneticField():
         rect.bottom = self.max_height
 
         pygame.draw.rect(image, pygame.Color("#2d34e1"),
-                        (arrow_width // 3, arrow_width // 2,
-                         arrow_width // 3, self.get_height()))
+                         (arrow_width // 3, arrow_width // 2,
+                          arrow_width // 3, self.get_height()))
         image.blit(self.arrow, self.arrow.get_rect(topleft=(0, 0)))
         if self.value < 0:
             image = pygame.transform.rotate(image, 180)

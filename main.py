@@ -10,10 +10,37 @@ BG_COLOR = pygame.Color('white')
 
 
 class Manager:
-    """Handles events and switching between menus."""
+    """Handles events and switching between menus.
 
+    Attributes:
+        level_number: number of levels currently available.
+        manager: object that manages menu buttons.
+
+        running: variable that shows if the app is still opened.
+        game_on: variable that shows if a game (a level) is being played.
+        construction: variable that shows if a new level is being constructed.
+        chaos_on: variable that shows if chaos is being studied.
+        game: object that represents a game (a level).
+        constructor: object that represents a level constructor.
+        chaos_study: object that represents a chaos study.
+        chaos_mode: variable that determines what happens if one clicks on a level button. If False the game will
+            start,otherwise a chaos study will begin.
+
+        slb_rect: array of rectangles, containing select level button in different menus.
+        select_level_button: button that leads to menu where one can select a level to play, or to study.
+
+        mmb_rect: array of rectangles, containing main menu button in different menus.
+        main_menu_button: button that leads to main menu.
+
+        lb_managers: objects that manage level buttons.
+        level_buttons: array of buttons. If one clicks on a button from the array a level will start or the study will
+            begin.
+        new_level_button: button that leads to a menu where one can create a new level.
+
+        cb_rect: rectangle, containing chaos button.
+        chaos_button: button that changes chaos_mode.
+    """
     def __init__(self):
-        """Creates buttons, manager, game."""
         self.level_number = data.number_of_levels()
         self.make_level_pictures()
         self.manager = pygame_gui.UIManager(WINDOW_SIZE,
@@ -217,11 +244,13 @@ class Manager:
         self.select_level_button.rebuild()
 
     def update_buttons(self):
+        """Updates buttons."""
         if self.level_number < data.number_of_levels():
             self.level_number = data.number_of_levels()
             self.level_buttons = self.make_level_buttons()
 
     def start_chaos_study(self, level):
+        """Actions before the chaos study begins."""
         self.select_level_button.visible = 1
         self.new_level_button.visible = 0
         self.chaos_button.visible = 0
@@ -232,9 +261,7 @@ class Manager:
 
 
 def main():
-    """
-    Creates main cycle and the screen. Calls manager.
-    """
+    """Creates main cycle and the screen. Calls manager. """
     pygame.init()
     screen = pygame.display.set_mode(WINDOW_SIZE)
     clock = pygame.time.Clock()
