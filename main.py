@@ -98,7 +98,7 @@ class Manager:
                                                              manager=self.manager,
                                                              visible=0,
                                                              object_id="menu_button")
-        self.cb_rect = pygame.Rect((245, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50))
+        self.cb_rect = pygame.Rect((245 + 20, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50))
         self.chaos_button = pygame_gui.elements.UIButton(relative_rect=self.cb_rect,
                                                          text="Chaos",
                                                          manager=self.manager,
