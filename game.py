@@ -112,33 +112,34 @@ class Game:
         """
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
-                btn = event.button
-                if btn == 3:  # leftclick
-                    self.B.zero_value()
-                if self.ball.vel_value() == 0:
-                    if btn == 1:  # rightclick
-                        if self.first_hit:
-                            self.first_hit = False
-                        else:
-                            self.reduce_score(2)
+                if event.pos[1] < WINDOW_HEIGHT - 50 * 3 // 2:
+                    btn = event.button
+                    if btn == 3:  # leftclick
+                        self.B.zero_value()
+                    if self.ball.vel_value() == 0:
+                        if btn == 1:  # rightclick
+                            if self.first_hit:
+                                self.first_hit = False
+                            else:
+                                self.reduce_score(2)
 
-                        self.ball.vel = self.cue.get_vel()
-                    if self.B.rect.collidepoint(event.pos):
+                            self.ball.vel = self.cue.get_vel()
+                        if self.B.rect.collidepoint(event.pos):
+                            if btn == 4:  # mousewheel up
+                                self.B.change_value(1)
+                            if btn == 5:  # mousewheel down
+                                self.B.change_value(-1)
+                        else:
+                            if self.ball.vel_value() == 0:
+                                if btn == 4:  # mousewheel up
+                                    self.cue.change_value(5)
+                                if btn == 5:  # mousewheel down
+                                    self.cue.change_value(-5)
+                    else:
                         if btn == 4:  # mousewheel up
                             self.B.change_value(1)
                         if btn == 5:  # mousewheel down
                             self.B.change_value(-1)
-                    else:
-                        if self.ball.vel_value() == 0:
-                            if btn == 4:  # mousewheel up
-                                self.cue.change_value(5)
-                            if btn == 5:  # mousewheel down
-                                self.cue.change_value(-5)
-                else:
-                    if btn == 4:  # mousewheel up
-                        self.B.change_value(1)
-                    if btn == 5:  # mousewheel down
-                        self.B.change_value(-1)
 
         self.cue.update(pygame.mouse.get_pos())
         self.cue.pos = self.ball.pos
@@ -235,29 +236,32 @@ class Constructor:
                                      self.obstacles[self.obstacle_number].vertices[0]]
                         self.line_pos = [[start_pos[0], event.pos], [start_pos[1], event.pos]]
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    if self.stage == 0:
-                        if len(self.obstacles) <= self.obstacle_number:
-                            self.obstacles.append(objects.Obstacle(self.all_sprites, WINDOW_SIZE,
-                                                                   np.array(event.pos, ndmin=2)))
-                        else:
-                            if self.obstacle_number:
-                                fill_color = pygame.Color("white")
+                if event.pos[1] < WINDOW_HEIGHT - 50 * 3 // 2:
+                    if event.button == 1:
+                        if self.stage == 0:
+                            if len(self.obstacles) <= self.obstacle_number:
+                                self.obstacles.append(objects.Obstacle(self.all_sprites, WINDOW_SIZE,
+                                                                       np.array(event.pos, ndmin=2)))
                             else:
-                                fill_color = pygame.Color("#0060ff")
-                            new_vertices = np.concatenate((self.obstacles[self.obstacle_number].vertices,
-                                                           np.array(event.pos, ndmin=2)),
-                                                          axis=0)
-                            self.obstacles[self.obstacle_number] = objects.Obstacle(self.all_sprites, WINDOW_SIZE,
-                                                                                    new_vertices,
-                                                                                    fill_color=fill_color)
-                    elif self.stage == 1:
-                        self.pocket = objects.Pocket(self.all_sprites, 10, event.pos)
-                    elif self.stage == 2:
-                        self.ball = objects.Ball(self.all_sprites, 10, event.pos)
+                                if self.obstacle_number:
+                                    fill_color = pygame.Color("white")
+                                else:
+                                    fill_color = pygame.Color("#0060ff")
+                                new_vertices = np.concatenate((self.obstacles[self.obstacle_number].vertices,
+                                                               np.array(event.pos, ndmin=2)),
+                                                              axis=0)
+                                self.obstacles[self.obstacle_number] = objects.Obstacle(self.all_sprites, WINDOW_SIZE,
+                                                                                        new_vertices,
+                                                                                        fill_color=fill_color)
+                        elif self.stage == 1:
+                            self.pocket = objects.Pocket(self.all_sprites, 10, event.pos)
+                        elif self.stage == 2:
+                            self.ball = objects.Ball(self.all_sprites, 10, event.pos)
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RIGHT:
-                    if self.stage <= 2:
+                    if self.stage == 0 and len(self.obstacles) > 0 or \
+                            self.stage == 1 and self.pocket is not None or\
+                            self.stage == 2 and self.ball is not None:
                         self.stage += 1
                 elif event.key == pygame.K_LEFT:
                     if self.stage >= 1:
@@ -347,7 +351,7 @@ class ChaosStudy:
 
         self.all_sprites = pygame.sprite.Group()
 
-        self.ball_number = 15
+        self.ball_number = 10
 
         self.balls = []
         self.cue = None
@@ -364,9 +368,6 @@ class ChaosStudy:
         self.plot_on = False
         self.length = []
         self.angles = []
-        for i in range(self.ball_number):
-            self.length.append([])
-            self.angles.append([])
 
     def make_map(self):
         """Makes a map of the level."""
@@ -392,34 +393,37 @@ class ChaosStudy:
         if len(self.balls) >= 1 and self.balls[0].vel_value() == 0:
             self.field.blit(self.cue.image, self.cue.rect)
 
-    def update(self, events, dt):
+    def update(self, events, dt, variables):
         """Handles events and updates balls"""
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
-                btn = event.button
-                if len(self.balls) == 0:
-                    if btn == 1:
-                        self.make_balls(event)
-                        self.cue = objects.Cue(self.all_sprites, self.balls[0].pos, max_vel=15)
-                    if self.B.rect.collidepoint(event.pos):
-                        if btn == 4:  # mousewheel up
-                            self.B.change_value(1)
-                        if btn == 5:  # mousewheel down
-                            self.B.change_value(-1)
-                elif self.balls[0].vel_value() == 0:
-                    if btn == 1:  # rightclick
-                        self.set_vel(self.cue.get_vel())
-                    if self.B.rect.collidepoint(event.pos):
-                        if btn == 4:  # mousewheel up
-                            self.B.change_value(1)
-                        if btn == 5:  # mousewheel down
-                            self.B.change_value(-1)
-                    else:
-                        if self.balls[0].vel_value() == 0:
+                if event.pos[1] < WINDOW_HEIGHT - 50 * 3 // 2:
+                    btn = event.button
+                    if len(self.balls) == 0:
+                        if btn == 1:
+                            self.update_variables(variables)
+                            self.make_balls(event)
+                            self.cue = objects.Cue(self.all_sprites, self.balls[0].pos, max_vel=15)
+                        if self.B.rect.collidepoint(event.pos):
                             if btn == 4:  # mousewheel up
-                                self.cue.change_value(5)
+                                self.B.change_value(1)
                             if btn == 5:  # mousewheel down
-                                self.cue.change_value(-5)
+                                self.B.change_value(-1)
+                    elif self.balls[0].vel_value() == 0:
+                        if btn == 1:  # rightclick
+                            self.update_variables(variables)
+                            self.set_vel(self.cue.get_vel())
+                        if self.B.rect.collidepoint(event.pos):
+                            if btn == 4:  # mousewheel up
+                                self.B.change_value(1)
+                            if btn == 5:  # mousewheel down
+                                self.B.change_value(-1)
+                        else:
+                            if self.balls[0].vel_value() == 0:
+                                if btn == 4:  # mousewheel up
+                                    self.cue.change_value(5)
+                                if btn == 5:  # mousewheel down
+                                    self.cue.change_value(-5)
             elif event.type == pygame.KEYDOWN:
                 if self.balls[0].vel_value() == 0 and event.key == pygame.K_LEFT:
                     self.balls = []
@@ -455,6 +459,8 @@ class ChaosStudy:
         """Creates balls."""
         ball_coords = [np.array(event.pos)]
         self.balls.append(objects.Ball(self.all_sprites, 10, ball_coords[0]))
+        self.length.append([])
+        self.angles.append([])
         for i in range(self.ball_number * 10):
             if len(self.balls) < self.ball_number:
                 color = pygame.Color(np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255))
@@ -467,6 +473,8 @@ class ChaosStudy:
                         break
                 if not collide:
                     self.balls.append(new_ball)
+                    self.length.append([])
+                    self.angles.append([])
             else:
                 break
 
@@ -509,3 +517,8 @@ class ChaosStudy:
             color = (ball.color[0]/255, ball.color[1]/255, ball.color[2]/255)
             section.scatter(self.length[i], self.angles[i], color=color, s=20)
         plt.show()
+
+    def update_variables(self, variables):
+        self.d_coord = variables[0]
+        self.d_angle = variables[1]
+        self.ball_number = variables[2]
