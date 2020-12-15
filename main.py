@@ -299,7 +299,7 @@ class Manager:
         self.exit_button.visible = 0
         self.select_level_button.visible = 0
 
-        self.info_rect = pygame.Rect(0, 0, WINDOW_WIDTH - 100, WINDOW_HEIGHT // 1.3)
+        self.info_rect = pygame.Rect(0, 0, WINDOW_WIDTH - 100, WINDOW_HEIGHT // 1.2)
         self.info_rect.centerx = WINDOW_WIDTH // 2
         self.info_rect.bottom = self.main_menu_button.rect.top - 5
 
@@ -311,7 +311,7 @@ class Manager:
         text_h = rendered_char.get_height()
         for i, line in enumerate(text.splitlines()):
             rendered_line = font.render(line, 1, pygame.Color("black"))
-            self.info.blit(rendered_line, (1, 1 + i * text_h))
+            self.info.blit(rendered_line, (4, 1 + i * text_h))
 
     def start_level(self, level):
         """Actions after a level was selected."""
