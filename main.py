@@ -3,6 +3,7 @@ import pygame_gui
 import game
 import data
 import numpy as np
+import webbrowser
 
 WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
 FPS = 60
@@ -59,7 +60,7 @@ class Manager:
         self.chaos_study = None
         self.chaos_mode = False
 
-        self.slb_rect = [pygame.Rect((160, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
+        self.slb_rect = [pygame.Rect((135, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
                          pygame.Rect((WINDOW_WIDTH // 2 - 50, WINDOW_HEIGHT // 2 - 50 - 70), (100, 50))]
         self.select_level_button = pygame_gui.elements.UIButton(relative_rect=self.slb_rect[1],
                                                                 text='Levels',
@@ -78,19 +79,24 @@ class Manager:
                                                            text='Credits',
                                                            manager=self.manager,
                                                            object_id="menu_button")
-        self.hb_rect = self.cb_rect.copy()
-        self.hb_rect.top = self.cb_rect.bottom + 5
-        self.help_button = pygame_gui.elements.UIButton(relative_rect=self.hb_rect,
-                                                           text='Help',
+        self.text_box = None
+        self.gbb_rect = pygame.Rect((WINDOW_WIDTH - 125, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50))
+        self.go_back_button = pygame_gui.elements.UIButton(relative_rect=self.gbb_rect,
+                                                           text="Go back",
                                                            manager=self.manager,
+                                                           visible=0,
                                                            object_id="menu_button")
-        self.exit_rect = self.hb_rect.copy()
-        self.exit_rect.top = self.hb_rect.bottom + 5
+        self.help_button = pygame_gui.elements.UIButton(relative_rect=self.gbb_rect,
+                                                        text='Help',
+                                                        manager=self.manager,
+                                                        object_id="menu_button",
+                                                        visible=0)
+        self.exit_rect = self.cb_rect.copy()
+        self.exit_rect.top = self.cb_rect.bottom + 5
         self.exit_button = pygame_gui.elements.UIButton(relative_rect=self.exit_rect,
-                                                           text='Exit',
-                                                           manager=self.manager,
-                                                           object_id="menu_button")
-
+                                                        text='Exit',
+                                                        manager=self.manager,
+                                                        object_id="menu_button")
         self.lb_managers = []
         self.level_buttons = self.make_level_buttons()
         self.new_level_button = pygame_gui.elements.UIButton(relative_rect=self.slb_rect[0],
@@ -161,9 +167,6 @@ class Manager:
             for i in range(3):
                 screen.blit(self.slider_values[i], (self.sliders_rect[i][0], self.sliders_rect[i][1] + 50))
 
-        if self.info_on:
-            screen.blit(self.info, self.info_rect)
-
         self.manager.draw_ui(screen)
         for manager in self.lb_managers:
             manager.draw_ui(screen)
@@ -181,8 +184,16 @@ class Manager:
                         text = data.read_info("credits.txt")
                         self.display_info(text)
                     if event.ui_element == self.help_button:
-                        text = data.read_info("help.txt")
+                        if self.game_on:
+                            text = data.read_info("help_game.txt")
+                        elif self.construction:
+                            text = data.read_info("help_constructor.txt")
+                        else:
+                            text = data.read_info("help_chaos.txt")
                         self.display_info(text)
+                        self.help_button.visible = 0
+                    if event.ui_element == self.go_back_button:
+                        self.go_back()
                     if event.ui_element == self.exit_button:
                         self.running = False
                     if event.ui_element == self.select_level_button:
@@ -209,27 +220,30 @@ class Manager:
                     for slider in self.sliders:
                         if event.ui_element == slider:
                             self.update_value()
+                if event.user_type == pygame_gui.UI_TEXT_BOX_LINK_CLICKED:
+                    if event.ui_element == self.text_box:
+                        if event.link_target == 'chaos_1':
+                            webbrowser.open_new_tab("https://www.youtube.com/watch?v=alvgk5N_U_o&list=WL&index=2")
+                        elif event.link_target == 'credits':
+                            webbrowser.open_new_tab("https://github.com/python-practice-b02-006/magnetic-pool")
             self.manager.process_events(event)
             for manager in self.lb_managers:
                 manager.process_events(event)
 
-            if self.info_on and event.type == pygame.KEYDOWN \
-                    and pygame.key.get_pressed()[pygame.K_c]:
-                pygame.scrap.put(pygame.SCRAP_TEXT,
-                b"https://github.com/python-practice-b02-006/magnetic-pool")
 
 
-        if self.game_on:
-            if not self.game.win:
-                self.game.update(events, DT)
-            else:
-                self.win_game()
-        if self.chaos_on:
-            variables = [slider.get_current_value() for slider in self.sliders]
-            self.chaos_study.update(events, DT, variables)
-        if self.construction:
-            if not self.constructor.stage == 3:
-                self.constructor.update(events)
+        if not self.info_on:
+            if self.game_on:
+                if not self.game.win:
+                    self.game.update(events, DT)
+                else:
+                    self.win_game()
+            if self.chaos_on:
+                variables = [slider.get_current_value() for slider in self.sliders]
+                self.chaos_study.update(events, DT, variables)
+            if self.construction:
+                if not self.constructor.stage == 3:
+                    self.constructor.update(events)
 
     def main_menu(self):
         """Actions after main menu button was pushed."""
@@ -244,8 +258,7 @@ class Manager:
         self.credits_button.visible = 1
         self.credits_button.rebuild()
 
-        self.help_button.visible = 1
-        self.help_button.rebuild()
+        self.help_button.visible = 0
 
         self.exit_button.visible = 1
         self.exit_button.rebuild()
@@ -260,8 +273,6 @@ class Manager:
         self.constructor = None
         self.chaos_on = False
         self.chaos_study = None
-
-        self.info_on = False
 
         self.delete_sliders()
 
@@ -290,34 +301,34 @@ class Manager:
         self.delete_sliders()
 
     def display_info(self, text):
+        """Displays text."""
         self.info_on = True
-        self.main_menu_button.visible = 1
-        self.main_menu_button.rect = self.mmb_rect[0]
-        self.main_menu_button.rebuild()
-        self.credits_button.visible = 0
-        self.help_button.visible = 0
-        self.exit_button.visible = 0
-        self.select_level_button.visible = 0
 
-        self.info_rect = pygame.Rect(0, 0, WINDOW_WIDTH - 100, WINDOW_HEIGHT // 1.3)
-        self.info_rect.centerx = WINDOW_WIDTH // 2
-        self.info_rect.bottom = self.main_menu_button.rect.top - 5
+        info_rect = pygame.Rect(0, 0, WINDOW_WIDTH - 100, int(WINDOW_HEIGHT / 1.3))
+        info_rect.centerx = WINDOW_WIDTH // 2
+        info_rect.bottom = self.main_menu_button.rect.top - 5
 
-        self.info = pygame.Surface(self.info_rect.size, pygame.SRCALPHA)
-        pygame.draw.rect(self.info, pygame.Color("#808080"), (0, 0, *self.info.get_size()), 1)
+        self.text_box = pygame_gui.elements.UITextBox(html_text=text,
+                                                      relative_rect=info_rect,
+                                                      manager=self.manager,
+                                                      object_id="text_box")
+        self.go_back_button.visible = 1
 
-        font = pygame.font.SysFont("arial", 20)
-        rendered_char = font.render("1", 1, pygame.Color('black'))
-        text_h = rendered_char.get_height()
-        for i, line in enumerate(text.splitlines()):
-            rendered_line = font.render(line, 1, pygame.Color("black"))
-            self.info.blit(rendered_line, (1, 1 + i * text_h))
+    def go_back(self):
+        """Destroys the text box and continues whatever was happening."""
+        self.text_box.kill()
+        self.text_box = None
+        self.info_on = False
+        self.go_back_button.visible = 0
+        if not self.credits_button.visible:
+            self.help_button.visible = 1
 
     def start_level(self, level):
         """Actions after a level was selected."""
         self.select_level_button.visible = 1
         self.new_level_button.visible = 0
         self.chaos_button.visible = 0
+        self.help_button.visible = 1
         for level_button in self.level_buttons:
             level_button.visible = 0
         self.game_on = True
@@ -328,6 +339,7 @@ class Manager:
         self.new_level_button.visible = 0
         self.select_level_button.visible = 1
         self.chaos_button.visible = 0
+        self.help_button.visible = 1
         for level_button in self.level_buttons:
             level_button.visible = 0
         self.construction = True
@@ -355,6 +367,7 @@ class Manager:
         self.build_sliders()
         self.update_value()
         self.chaos_button.visible = 0
+        self.help_button.visible = 1
         for level_button in self.level_buttons:
             level_button.visible = 0
         self.chaos_on = True

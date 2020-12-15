@@ -1,0 +1,17 @@
+<font color='#000000'>
+Constructing level is divided into 4 stages. You can switch between stages using left and right arrows.
+You can go to the next stage only if the previous one was completed. <br> <br>
+
+Stage 1. Drawing obstacles.<br>
+During this stage you should create obstacles. First obstacle is edge of the table. Other obstacles are optional.
+You can create vertices by right clicking on the screen. To finish drawing an obstacle you need to press "space". <br> <br>
+
+Stage 2. Picking where the pocket is.<br>
+Now it's time to pick where the pocket is. To do it you just right click on the screen. <br> <br>
+
+Stage 3. Picking where the ball is.<br>
+Almost done. The only thing left is to pick where the ball is. To do it you should right click on the screen. <br> <br>
+
+Stage 4. Saving the level.<br>
+The level is done and saved. You can return to level selection menu.
+</font>
