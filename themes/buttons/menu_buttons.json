@@ -1,16 +1,4 @@
 {
-    "button": {
-        "colours": {
-            "normal_bg": "#ffffff",
-            "hovered_bg": "#eeeeee",
-            "normal_border": "#AAAAAA",
-            "hovered_border": "#B0B0B0"
-        },
-        "misc": {
-            "border_width": "2",
-            "shadow_width": "0"
-        }
-    },
     "menu_button": {
         "colours": {
             "normal_bg": "#45494e",
@@ -30,5 +18,38 @@
             "selected_border": "#8080B0",
             "active_border": "#8080B0"
         }
-    }
+    },
+    "text_box":
+     {
+         "colours":
+         {
+             "dark_bg":"#FFFFFF",
+             "normal_border": "#555555",
+             "link_text": "#000000",
+             "link_hover": "#000000",
+             "link_selected": "#AAAAAA"
+         },
+
+         "misc":
+         {
+             "border_width": "1",
+             "padding": "10,10",
+             "link_normal_underline": "0",
+             "link_hover_underline": "1"
+         }
+     },
+     "text_box.vertical_scroll_bar":
+     {
+         "colours":
+         {
+            "dark_bg": "#505068"
+         }
+     },
+     "text_box.vertical_scroll_bar.#sliding_button":
+     {
+         "misc":
+         {
+            "border_width": "1"
+         }
+     }
 }

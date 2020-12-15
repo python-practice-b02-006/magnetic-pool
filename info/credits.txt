@@ -1,5 +1,4 @@
-АВТОР ИДЕИ: ХРОМОВ ДМИТРИЙ
-ГЛАВНЫЙ КОНСТРУКТОР: ХРОМОВ ДМИТРИЙ
-ГЛАВНЫЙ ПОМОШНИК: ТАМБОВЦЕВ ИЛЬЯ
-
-Нажмите C чтобы скопировать ссылку на гитхаб в буфер обмена.
+<font color='#000000'>
+Developers: Khromov Dmitry, Tambovtsev Ilya. <br>
+For more information visit GitHub repository: <br>
+<a href="credits">https://github.com/python-practice-b02-006/magnetic-pool</a></font>

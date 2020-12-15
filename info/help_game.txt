@@ -1,0 +1,13 @@
+<font color='#000000'>
+Your goal is simple: put the ball in the pocket. <br> <br>
+
+Right click to hit the ball. <br>
+You can use mouse wheel to control speed that the ball will receive when you hit it. <br>
+The ball is actually a charged particle and there is magnetic field that is perpendicular to the table. <br>
+To change the magnetic field use mouse wheel. <br>
+If you left click, magnetic field will become 0. <br> <br>
+
+You can get 10 points for the level. <br>
+When the ball hits the wall, you lose 1 point. <br>
+Each time you hit the ball, except for the first one, you lose 2 points.  <br>
+</font>

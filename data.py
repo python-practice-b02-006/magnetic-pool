@@ -138,7 +138,11 @@ def write_score(level, score):
         with open(os.path.join("levels", "high_scores.txt"), "w", encoding="utf8") as f:
             f.write("\n".join([f"{k} {v}" for k, v in data.items()]))
 
+
 def read_info(fname):
+    text = ""
     with open(os.path.join("info", fname), "r",  encoding="utf8") as f:
-        text = f.read()
+        for line in f:
+            line = line.replace("\n", "")
+            text = text + line
     return text

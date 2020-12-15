@@ -321,6 +321,7 @@ class ChaosStudy:
     Attributes:
         field: surface to which every object is blitted.
         stop: variable that shows if balls are moving.
+        level: level number.
         all_sprites: group that contains all objects.
 
         ball_number: number of balls being simulated
@@ -348,6 +349,7 @@ class ChaosStudy:
         pygame.draw.rect(self.field, pygame.Color("white"), ((0, 0), WINDOW_SIZE))
 
         self.stop = False
+        self.level = level
 
         self.all_sprites = pygame.sprite.Group()
 

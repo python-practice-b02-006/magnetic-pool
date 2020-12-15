@@ -1,0 +1,20 @@
+<font color='#000000'>
+This mode allows you to study chaos. You can do that by looking at how the balls with close initial conditions move.
+Another thing you can do is to draw a Poincare section of the phase space. <br> <br>
+
+Creating balls. <br>
+Before you create balls you can change the number of balls that will be created using rightmost slider. These balls will
+have slightly different coordinates and velocity angles. Other two sliders allow you to change how much they will differ.
+To create balls you right click on the screen. Then you give them velocity using the cue. <br> <br>
+
+Poincare section<br>
+Phase space of the system is four dimensional, so to look at the phase space we construct what's known as Poincare
+section. We will plot information about the points where the balls collide with the edge of the table. To do that we
+introduce new coordinate system. On the x axis we will plot the distance along the edge of the table between the first
+vertex of the edge and the point of collision. On the y axis we will plot cosine of the angle between the edge and
+velocity of the ball. <br>
+To create a plot press "space". When you are finished, close the plot and press "space" again to continue playing. <br>
+
+For more information about Poincare section you can watch this video: <br>
+<a href="chaos_1">https://www.youtube.com/watch?v=alvgk5N_U_o&list=WL&index=2</a>
+</font>
