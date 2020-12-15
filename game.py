@@ -259,7 +259,9 @@ class Constructor:
                             self.ball = objects.Ball(self.all_sprites, 10, event.pos)
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RIGHT:
-                    if self.stage <= 2:
+                    if self.stage == 0 and len(self.obstacles) > 0 or \
+                            self.stage == 1 and self.pocket is not None or\
+                            self.stage == 2 and self.ball is not None:
                         self.stage += 1
                 elif event.key == pygame.K_LEFT:
                     if self.stage >= 1:
