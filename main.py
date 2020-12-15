@@ -2,6 +2,7 @@ import pygame
 import pygame_gui
 import game
 import data
+import numpy as np
 
 WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
 FPS = 60
@@ -39,6 +40,9 @@ class Manager:
 
         cb_rect: rectangle, containing chaos button.
         chaos_button: button that changes chaos_mode.
+
+        sliders_rect: rectangles that contain sliders.
+        sliders: sliders that are used in chaos study mode.
     """
     def __init__(self):
         self.level_number = data.number_of_levels()
@@ -54,13 +58,13 @@ class Manager:
         self.chaos_study = None
         self.chaos_mode = False
 
-        self.slb_rect = [pygame.Rect((160, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
+        self.slb_rect = [pygame.Rect((135, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
                          pygame.Rect((WINDOW_WIDTH // 2 - 50, WINDOW_HEIGHT // 2 - 50), (100, 50))]
         self.select_level_button = pygame_gui.elements.UIButton(relative_rect=self.slb_rect[1],
                                                                 text='Levels',
                                                                 manager=self.manager,
                                                                 object_id="menu_button")
-        self.mmb_rect = [pygame.Rect((50, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
+        self.mmb_rect = [pygame.Rect((25, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
                          pygame.Rect((WINDOW_WIDTH // 2 - 50, WINDOW_HEIGHT // 2 + 35), (100, 50))]
         self.main_menu_button = pygame_gui.elements.UIButton(relative_rect=self.mmb_rect[0],
                                                              text='Main menu',
@@ -75,12 +79,19 @@ class Manager:
                                                              manager=self.manager,
                                                              visible=0,
                                                              object_id="menu_button")
-        self.cb_rect = pygame.Rect((270, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50))
+        self.cb_rect = pygame.Rect((245, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50))
         self.chaos_button = pygame_gui.elements.UIButton(relative_rect=self.cb_rect,
                                                          text="Chaos",
                                                          manager=self.manager,
                                                          visible=0,
                                                          object_id="menu_button")
+        self.sliders_rect = [
+            pygame.Rect((245, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
+            pygame.Rect((355, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
+            pygame.Rect((465, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
+        ]
+        self.sliders = []
+        self.slider_values = [pygame.Surface((100, 20)) for i in range(3)]
 
     def make_level_pictures(self):
         """Makes pictures of fields of all levels."""
@@ -128,6 +139,8 @@ class Manager:
         if self.chaos_on:
             self.chaos_study.draw_on_field()
             screen.blit(self.chaos_study.field, (0, 0))
+            for i in range(3):
+                screen.blit(self.slider_values[i], (self.sliders_rect[i][0], self.sliders_rect[i][1] + 50))
 
         self.manager.draw_ui(screen)
         for manager in self.lb_managers:
@@ -162,6 +175,10 @@ class Manager:
                                 self.start_level(i + 1)
                             else:
                                 self.start_chaos_study(i + 1)
+                if event.user_type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
+                    for slider in self.sliders:
+                        if event.ui_element == slider:
+                            self.update_value()
             self.manager.process_events(event)
             for manager in self.lb_managers:
                 manager.process_events(event)
@@ -171,7 +188,8 @@ class Manager:
             else:
                 self.win_game()
         if self.chaos_on:
-            self.chaos_study.update(events, DT)
+            variables = [slider.get_current_value() for slider in self.sliders]
+            self.chaos_study.update(events, DT, variables)
         if self.construction:
             if not self.constructor.stage == 3:
                 self.constructor.update(events)
@@ -194,6 +212,7 @@ class Manager:
         self.constructor = None
         self.chaos_on = False
         self.chaos_study = None
+        self.delete_sliders()
 
     def select_level(self):
         """Actions after select level button was pushed."""
@@ -213,6 +232,7 @@ class Manager:
         self.constructor = None
         self.chaos_on = False
         self.chaos_study = None
+        self.delete_sliders()
 
     def start_level(self, level):
         """Actions after a level was selected."""
@@ -253,11 +273,56 @@ class Manager:
         """Actions before the chaos study begins."""
         self.select_level_button.visible = 1
         self.new_level_button.visible = 0
+        self.build_sliders()
+        self.update_value()
         self.chaos_button.visible = 0
         for level_button in self.level_buttons:
             level_button.visible = 0
         self.chaos_on = True
         self.chaos_study = game.ChaosStudy(level)
+
+    def build_sliders(self):
+        """Creates sliders."""
+        self.sliders.append(pygame_gui.elements.UIHorizontalSlider(relative_rect=self.sliders_rect[0],
+                                                                   start_value=1,
+                                                                   value_range=(0.0, 5.0),
+                                                                   object_id="menu_button",
+                                                                   manager=self.manager,
+                                                                   visible=1))
+        self.sliders.append(pygame_gui.elements.UIHorizontalSlider(relative_rect=self.sliders_rect[1],
+                                                                   start_value=np.pi/360,
+                                                                   value_range=(0.0, np.pi/90),
+                                                                   object_id="menu_button",
+                                                                   manager=self.manager,
+                                                                   visible=1))
+        self.sliders.append(pygame_gui.elements.UIHorizontalSlider(relative_rect=self.sliders_rect[2],
+                                                                   start_value=10,
+                                                                   value_range=(1, 100),
+                                                                   object_id="menu_button",
+                                                                   manager=self.manager,
+                                                                   visible=1))
+        self.update_value()
+
+    def delete_sliders(self):
+        """Deletes sliders."""
+        for slider in self.sliders:
+            slider.kill()
+            self.sliders = []
+
+    def update_value(self):
+        """Updates text that shows the value of the slider."""
+        texts = ["Coord", "Angle", "Balls"]
+        for i, slider in enumerate(self.sliders):
+            self.slider_values[i].fill(BG_COLOR)
+            font = pygame.font.Font(None, 20)
+            value = slider.get_current_value()
+            if i == 1:
+                value = value / np.pi * 180
+            value = int(100 * value) / 100
+            text = font.render(str(texts[i]) + f": {value}", 1, pygame.Color('black'))
+            text_x = 0
+            text_y = 0
+            self.slider_values[i].blit(text, (text_x, text_y))
 
 
 def main():
