@@ -212,6 +212,13 @@ class Manager:
             self.manager.process_events(event)
             for manager in self.lb_managers:
                 manager.process_events(event)
+
+            if self.info_on and event.type == pygame.KEYDOWN \
+                    and pygame.key.get_pressed()[pygame.K_c]:
+                pygame.scrap.put(pygame.SCRAP_TEXT,
+                b"https://github.com/python-practice-b02-006/magnetic-pool")
+
+
         if self.game_on:
             if not self.game.win:
                 self.game.update(events, DT)
@@ -398,7 +405,7 @@ class Manager:
 
 
 def main():
-    """Creates main cycle and the screen. Calls manager. """
+    """Creates main cycle and the screen. Calls manager."""
     pygame.init()
     screen = pygame.display.set_mode(WINDOW_SIZE)
     pygame.scrap.init()
