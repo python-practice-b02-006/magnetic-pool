@@ -80,7 +80,7 @@ class Manager:
                                                            manager=self.manager,
                                                            object_id="menu_button")
         self.text_box = None
-        self.gbb_rect = pygame.Rect((WINDOW_WIDTH - 125, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50))
+        self.gbb_rect = pygame.Rect((685, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50))
         self.go_back_button = pygame_gui.elements.UIButton(relative_rect=self.gbb_rect,
                                                            text="Go back",
                                                            manager=self.manager,
@@ -117,6 +117,13 @@ class Manager:
         ]
         self.sliders = []
         self.slider_values = [pygame.Surface((100, 20)) for i in range(3)]
+
+        self.rb_rect = pygame.Rect((575, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50))
+        self.restart_button = pygame_gui.elements.UIButton(relative_rect=self.rb_rect,
+                                                           text="Restart",
+                                                           manager=self.manager,
+                                                           visible=0,
+                                                           object_id="menu_button")
 
     def make_level_pictures(self):
         """Makes pictures of fields of all levels."""
@@ -202,6 +209,8 @@ class Manager:
                         self.main_menu()
                     if event.ui_element == self.new_level_button:
                         self.new_level()
+                    if event.ui_element == self.restart_button:
+                        self.restart()
                     if event.ui_element == self.chaos_button:
                         self.chaos_mode = not self.chaos_mode
                         if self.chaos_mode:
@@ -229,8 +238,6 @@ class Manager:
             self.manager.process_events(event)
             for manager in self.lb_managers:
                 manager.process_events(event)
-
-
 
         if not self.info_on:
             if self.game_on:
@@ -265,6 +272,7 @@ class Manager:
 
         self.new_level_button.visible = 0
         self.chaos_button.visible = 0
+        self.restart_button.visible = 0
         for button in self.level_buttons:
             button.visible = 0
         self.game_on = False
@@ -288,6 +296,7 @@ class Manager:
         self.credits_button.visible = 0
         self.help_button.visible = 0
         self.exit_button.visible = 0
+        self.restart_button.visible = 0
         for button in self.level_buttons:
             button.visible = 1
         self.new_level_button.visible = 1
@@ -329,6 +338,7 @@ class Manager:
         self.new_level_button.visible = 0
         self.chaos_button.visible = 0
         self.help_button.visible = 1
+        self.restart_button.visible = 1
         for level_button in self.level_buttons:
             level_button.visible = 0
         self.game_on = True
@@ -340,6 +350,7 @@ class Manager:
         self.select_level_button.visible = 1
         self.chaos_button.visible = 0
         self.help_button.visible = 1
+        self.restart_button.visible = 1
         for level_button in self.level_buttons:
             level_button.visible = 0
         self.construction = True
@@ -368,6 +379,7 @@ class Manager:
         self.update_value()
         self.chaos_button.visible = 0
         self.help_button.visible = 1
+        self.restart_button.visible = 1
         for level_button in self.level_buttons:
             level_button.visible = 0
         self.chaos_on = True
@@ -415,6 +427,14 @@ class Manager:
             text_x = 0
             text_y = 0
             self.slider_values[i].blit(text, (text_x, text_y))
+
+    def restart(self):
+        if self.game_on:
+            self.game = game.Game(self.game.level)
+        elif self.chaos_on:
+            self.chaos_study = game.ChaosStudy(self.chaos_study.level)
+        elif self.construction:
+            self.constructor = game.Constructor(self.level_number + 1)
 
 
 def main():
