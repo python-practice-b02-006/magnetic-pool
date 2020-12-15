@@ -47,6 +47,7 @@ class Manager:
                                             "themes/buttons/menu_buttons.json")
         self.running = True
         self.game_on = False
+        self.info_on = False
         self.construction = False
         self.chaos_on = False
         self.game = None
@@ -55,7 +56,7 @@ class Manager:
         self.chaos_mode = False
 
         self.slb_rect = [pygame.Rect((160, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
-                         pygame.Rect((WINDOW_WIDTH // 2 - 50, WINDOW_HEIGHT // 2 - 50), (100, 50))]
+                         pygame.Rect((WINDOW_WIDTH // 2 - 50, WINDOW_HEIGHT // 2 - 50 - 70), (100, 50))]
         self.select_level_button = pygame_gui.elements.UIButton(relative_rect=self.slb_rect[1],
                                                                 text='Levels',
                                                                 manager=self.manager,
@@ -67,6 +68,24 @@ class Manager:
                                                              manager=self.manager,
                                                              visible=0,
                                                              object_id="menu_button")
+        self.cb_rect = self.slb_rect[1].copy()
+        self.cb_rect.top = self.cb_rect.bottom + 5
+        self.credits_button = pygame_gui.elements.UIButton(relative_rect=self.cb_rect,
+                                                           text='Credits',
+                                                           manager=self.manager,
+                                                           object_id="menu_button")
+        self.hb_rect = self.cb_rect.copy()
+        self.hb_rect.top = self.cb_rect.bottom + 5
+        self.help_button = pygame_gui.elements.UIButton(relative_rect=self.hb_rect,
+                                                           text='Help',
+                                                           manager=self.manager,
+                                                           object_id="menu_button")
+        self.exit_rect = self.hb_rect.copy()
+        self.exit_rect.top = self.hb_rect.bottom + 5
+        self.exit_button = pygame_gui.elements.UIButton(relative_rect=self.exit_rect,
+                                                           text='Exit',
+                                                           manager=self.manager,
+                                                           object_id="menu_button")
 
         self.lb_managers = []
         self.level_buttons = self.make_level_buttons()
@@ -129,6 +148,9 @@ class Manager:
             self.chaos_study.draw_on_field()
             screen.blit(self.chaos_study.field, (0, 0))
 
+        if self.info_on:
+            screen.blit(self.info, self.info_rect)
+
         self.manager.draw_ui(screen)
         for manager in self.lb_managers:
             manager.draw_ui(screen)
@@ -142,6 +164,14 @@ class Manager:
                 self.running = False
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == self.credits_button:
+                        text = data.read_info("credits.txt")
+                        self.display_info(text)
+                    if event.ui_element == self.help_button:
+                        text = data.read_info("help.txt")
+                        self.display_info(text)
+                    if event.ui_element == self.exit_button:
+                        self.running = False
                     if event.ui_element == self.select_level_button:
                         self.select_level()
                     if event.ui_element == self.main_menu_button:
@@ -181,9 +211,20 @@ class Manager:
         self.select_level_button.visible = 1
         self.select_level_button.rect = self.slb_rect[1]
         self.select_level_button.rebuild()
+
         self.main_menu_button.visible = 0
         self.main_menu_button.rect = self.mmb_rect[0]
         self.main_menu_button.rebuild()
+
+        self.credits_button.visible = 1
+        self.credits_button.rebuild()
+
+        self.help_button.visible = 1
+        self.help_button.rebuild()
+
+        self.exit_button.visible = 1
+        self.exit_button.rebuild()
+
         self.new_level_button.visible = 0
         self.chaos_button.visible = 0
         for button in self.level_buttons:
@@ -194,6 +235,7 @@ class Manager:
         self.constructor = None
         self.chaos_on = False
         self.chaos_study = None
+        self.info_on = False
 
     def select_level(self):
         """Actions after select level button was pushed."""
@@ -203,6 +245,10 @@ class Manager:
         self.select_level_button.visible = 0
         self.select_level_button.rect = self.slb_rect[0]
         self.select_level_button.rebuild()
+
+        self.credits_button.visible = 0
+        self.help_button.visible = 0
+        self.exit_button.visible = 0
         for button in self.level_buttons:
             button.visible = 1
         self.new_level_button.visible = 1
@@ -213,6 +259,30 @@ class Manager:
         self.constructor = None
         self.chaos_on = False
         self.chaos_study = None
+
+    def display_info(self, text):
+        self.info_on = True
+        self.main_menu_button.visible = 1
+        self.main_menu_button.rect = self.mmb_rect[0]
+        self.main_menu_button.rebuild()
+        self.credits_button.visible = 0
+        self.help_button.visible = 0
+        self.exit_button.visible = 0
+        self.select_level_button.visible = 0
+
+        self.info_rect = pygame.Rect(0, 0, WINDOW_WIDTH - 100, WINDOW_HEIGHT // 1.3)
+        self.info_rect.centerx = WINDOW_WIDTH // 2
+        self.info_rect.bottom = self.main_menu_button.rect.top - 5
+
+        self.info = pygame.Surface(self.info_rect.size, pygame.SRCALPHA)
+        pygame.draw.rect(self.info, pygame.Color("#808080"), (0, 0, *self.info.get_size()), 1)
+
+        font = pygame.font.SysFont("arial", 20)
+        rendered_char = font.render("1", 1, pygame.Color('black'))
+        text_h = rendered_char.get_height()
+        for i, line in enumerate(text.splitlines()):
+            rendered_line = font.render(line, 1, pygame.Color("black"))
+            self.info.blit(rendered_line, (1, 1 + i * text_h))
 
     def start_level(self, level):
         """Actions after a level was selected."""
@@ -264,6 +334,7 @@ def main():
     """Creates main cycle and the screen. Calls manager. """
     pygame.init()
     screen = pygame.display.set_mode(WINDOW_SIZE)
+    pygame.scrap.init()
     clock = pygame.time.Clock()
 
     manager = Manager()

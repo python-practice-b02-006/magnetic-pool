@@ -41,7 +41,7 @@ def read_map(level):
 def save_map(field, level):
     """Saves field of the level to folder images/levels"""
     field_rect = np.array([field.get_rect()[2], field.get_rect()[3]])
-    button_size = np.array([((WINDOW_SIZE[0] - 30 * 4) // 4), (WINDOW_SIZE[1] - 75 - 20 * 3) // 3])
+    button_size = np.array([((WINDOW_SIZE[0] - 30 * 4) // 4 - 6), (WINDOW_SIZE[1] - 75 - 20 * 3) // 3])
     coefficients = field_rect/button_size
     if coefficients[0] > coefficients[1]:
         field = pygame.transform.smoothscale(field,
@@ -137,3 +137,8 @@ def write_score(level, score):
         data[level] = score
         with open(os.path.join("levels", "high_scores.txt"), "w", encoding="utf8") as f:
             f.write("\n".join([f"{k} {v}" for k, v in data.items()]))
+
+def read_info(fname):
+    with open(os.path.join("info", fname), "r",  encoding="utf8") as f:
+        text = f.read()
+    return text
