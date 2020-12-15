@@ -17,7 +17,7 @@ class Ball(pygame.sprite.Sprite):
         image: image of the ball.
         rect: rectangle, that contains the ball.
     """
-    def __init__(self, group, radius, pos, color=pygame.Color("#f600ff")):
+    def __init__(self, group, radius, pos, color=pygame.Color("white")):
         super().__init__(group)
         self.radius = radius
         self.vel = np.zeros(2, dtype=float)

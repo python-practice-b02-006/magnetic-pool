@@ -61,7 +61,7 @@ class Manager:
         self.chaos_mode = False
 
         self.slb_rect = [pygame.Rect((135, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50)),
-                         pygame.Rect((WINDOW_WIDTH // 2 - 50, WINDOW_HEIGHT // 2 - 50 - 70), (100, 50))]
+                         pygame.Rect((WINDOW_WIDTH // 2 - 50, WINDOW_HEIGHT // 2 - 50), (100, 50))]
         self.select_level_button = pygame_gui.elements.UIButton(relative_rect=self.slb_rect[1],
                                                                 text='Levels',
                                                                 manager=self.manager,
