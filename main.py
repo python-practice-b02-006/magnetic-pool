@@ -27,6 +27,7 @@ class Manager:
         chaos_study: object that represents a chaos study.
         chaos_mode: variable that determines what happens if one clicks on a level button. If False the game will
             start,otherwise a chaos study will begin.
+        info_on: variable that shows if help or credits are being displayed.
 
         slb_rect: array of rectangles, containing select level button in different menus.
         select_level_button: button that leads to menu where one can select a level to play, or to study.
@@ -39,11 +40,26 @@ class Manager:
             begin.
         new_level_button: button that leads to a menu where one can create a new level.
 
-        cb_rect: rectangle, containing chaos button.
+        chb_rect: rectangle, containing chaos button.
         chaos_button: button that changes chaos_mode.
+
+        cb_rect: rectangle, containing credits button.
+        credits_button: credits button.
+
+        exit_rect: rectangle, containing exit button.
+        exit_button: exit button.
+
+        text_box: object that contains text for help and credits.
+
+        gbb_rect: rectangle containing help and go_back buttons.
+        help_button: help button.
+        go_back_button: button that needs to be pushed to close help or credits.
 
         sliders_rect: rectangles that contain sliders.
         sliders: sliders that are used in chaos study mode.
+
+        rb_rect: rectangle, containing restart button.
+        restart_button: button that allows player to restart level, construction of level, chaos study.
     """
     def __init__(self):
         self.level_number = data.number_of_levels()
@@ -104,8 +120,8 @@ class Manager:
                                                              manager=self.manager,
                                                              visible=0,
                                                              object_id="menu_button")
-        self.cb_rect = pygame.Rect((245, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50))
-        self.chaos_button = pygame_gui.elements.UIButton(relative_rect=self.cb_rect,
+        self.chb_rect = pygame.Rect((245, WINDOW_HEIGHT - 50 * 3 // 2), (100, 50))
+        self.chaos_button = pygame_gui.elements.UIButton(relative_rect=self.chb_rect,
                                                          text="Chaos",
                                                          manager=self.manager,
                                                          visible=0,
@@ -431,6 +447,7 @@ class Manager:
             self.slider_values[i].blit(text, (text_x, text_y))
 
     def restart(self):
+        """Restarts level, construction of level or chaos study."""
         if self.game_on:
             self.game = game.Game(self.game.level)
         elif self.chaos_on:

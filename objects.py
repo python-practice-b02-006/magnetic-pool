@@ -259,7 +259,7 @@ class Obstacle(pygame.sprite.Sprite):
         return p, v
 
 
-class MagneticField():
+class MagneticField:
     """
     manages magnetic field and creates it's image to blit on screen.
 

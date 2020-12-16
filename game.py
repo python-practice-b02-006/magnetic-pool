@@ -2,7 +2,7 @@ import pygame
 import objects
 import data
 import numpy as np
-from main import WINDOW_SIZE, WINDOW_WIDTH, WINDOW_HEIGHT,  BG_COLOR
+from main import WINDOW_SIZE, WINDOW_HEIGHT,  BG_COLOR
 import matplotlib.pyplot as plt
 
 
@@ -447,11 +447,11 @@ class ChaosStudy:
             for i, ball in enumerate(self.balls):
                 if np.linalg.norm(ball.vel) > 0:
                     for obstacle in self.obstacles:
-                        data = obstacle.collide(ball)
-                        if obstacle == self.obstacles[0] and data[0]:
+                        ball_data = obstacle.collide(ball)
+                        if obstacle == self.obstacles[0] and ball_data[0]:
                             # put a point on the section
-                            length = self.boundary_coords(data[1], data[2])
-                            angle = np.dot(ball.vel/np.linalg.norm(ball.vel), obstacle.tangent[data[2]])
+                            length = self.boundary_coords(ball_data[1], ball_data[2])
+                            angle = np.dot(ball.vel/np.linalg.norm(ball.vel), obstacle.tangent[ball_data[2]])
                             self.length[i].append(length)
                             self.angles[i].append(angle)
         elif not self.plot_on:

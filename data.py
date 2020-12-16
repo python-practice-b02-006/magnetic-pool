@@ -91,6 +91,7 @@ def save_level_data(constructor):
 
 
 def make_level_button_theme(level):
+    """Makes themes for level buttons."""
     data = {
         "button": {
             "colours": {
@@ -125,12 +126,17 @@ def number_of_levels():
 
 
 def get_levels_scores():
+    """
+
+    :return: dictionary that contains maximum scores.
+    """
     with open(os.path.join("levels", "high_scores.txt"), "r",  encoding="utf8") as f:
         data = {int(x): int(y) for line in f.readlines() for x, y in [tuple(line.split())]}
     return data
 
 
 def write_score(level, score):
+    """Writes score to file."""
     data = get_levels_scores()
     if data.get(level, 0) < score:
         data[level] = score
@@ -139,6 +145,7 @@ def write_score(level, score):
 
 
 def read_info(fname):
+    """Reads text that will be displayed in credits and help."""
     text = ""
     with open(os.path.join("info", fname), "r",  encoding="utf8") as f:
         for line in f:
