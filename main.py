@@ -364,6 +364,8 @@ class Manager:
         self.main_menu_button.rebuild()
         self.select_level_button.rect = self.slb_rect[1]
         self.select_level_button.rebuild()
+        self.help_button.visible = 0
+        self.restart_button.visible = 0
 
     def update_buttons(self):
         """Updates buttons."""
