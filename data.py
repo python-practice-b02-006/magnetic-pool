@@ -3,7 +3,6 @@ import pygame
 from main import WINDOW_SIZE
 import numpy as np
 import json
-import csv
 
 
 def read_map(level):
